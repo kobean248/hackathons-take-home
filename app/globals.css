@@ -4,12 +4,49 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ===========================================================
+   Hackathons @ Berkeley — flat, Cal Hacks-inspired palette.
+   No gradients anywhere. See design-doc.md for the full spec.
+   These are fixed brand tokens (not swapped for OS dark mode —
+   "dark" vs "light" here is a per-route register, not a
+   user preference; see the two-mode note in design-doc.md §2).
+   =========================================================== */
+@theme {
+  --color-navy-950: #0a0e1f;
+  --color-navy-800: #141a33;
+  --color-navy-600: #2a3358;
+  --color-ink: #12141f;
+  --color-ink-soft: #5b5f72;
+  --color-paper: #f6f4ee;
+  --color-surface: #ffffff;
+  --color-line: #e3e0d4;
+  --color-sky: #5c86b8;
+  --color-sunset: #de6b35;
+  --color-mint: #3e8f6c;
+  --color-amber: #b8862e;
+  --color-brick: #b4523f;
+
+  --font-display: var(--font-space-grotesk), var(--font-ibm-plex-sans), sans-serif;
+  --font-sans: var(--font-ibm-plex-sans), sans-serif;
+
+  /* type scale: 12/13/14/16/20/24/32/44 — only these stops */
+  --text-2xs: 0.8125rem; /* 13px */
+  --text-display: 2.75rem; /* 44px */
+  --text-h1: 2rem; /* 32px */
+  --text-h2: 1.5rem; /* 24px */
+  --text-h3: 1.25rem; /* 20px */
+
+  /* radius scale: 6px inputs/chips, 12px cards (Tailwind's rounded-xl
+     already lands on 12px), 20px hero panels */
+  --radius-chip: 6px;
+  --radius-hero: 20px;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,83 +85,63 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* The "light/working" register — dashboard, apply, organizer. This is the
+   app-wide default; landing/login/signup opt into the dark register
+   explicitly (bg-navy-950 text-white) rather than via a `.dark` class,
+   since which register a page uses is fixed by route, not user/OS
+   preference. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #f6f4ee; /* paper */
+  --foreground: #12141f; /* ink */
+  --card: #ffffff; /* surface */
+  --card-foreground: #12141f;
+  --popover: #ffffff;
+  --popover-foreground: #12141f;
+  --primary: #de6b35; /* sunset — the one loud accent */
+  --primary-foreground: #0a0e1f; /* navy-950 */
+  --secondary: #ece9e0;
+  --secondary-foreground: #12141f;
+  --muted: #ece9e0;
+  --muted-foreground: #5b5f72; /* ink-soft */
+  --accent: #eef2f7;
+  --accent-foreground: #12141f;
+  --destructive: #b4523f; /* brick */
+  --border: #e3e0d4; /* line */
+  --input: #e3e0d4;
+  --ring: #de6b35; /* sunset focus ring */
+  --chart-1: #de6b35;
+  --chart-2: #5c86b8;
+  --chart-3: #3e8f6c;
+  --chart-4: #b8862e;
+  --chart-5: #b4523f;
+  --radius: 0.75rem; /* 12px — cards */
+  --sidebar: #0a0e1f;
+  --sidebar-foreground: #f6f4ee;
+  --sidebar-primary: #de6b35;
+  --sidebar-primary-foreground: #0a0e1f;
+  --sidebar-accent: #141a33;
+  --sidebar-accent-foreground: #f6f4ee;
+  --sidebar-border: #2a3358;
+  --sidebar-ring: #de6b35;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  *:focus-visible {
+    outline: 2px solid var(--color-sunset);
+    outline-offset: 2px;
   }
   body {
     @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
   }
 }

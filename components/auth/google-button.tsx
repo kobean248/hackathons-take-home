@@ -36,7 +36,7 @@ export function GoogleButton({ next = "/dashboard" }: { next?: string }) {
       >
         {loading ? "Redirecting…" : "Continue with Google"}
       </Button>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-brick">{error}</p>}
     </div>
   );
 }
