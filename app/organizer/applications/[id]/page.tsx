@@ -10,13 +10,21 @@ import type { ApplicationStatus, ApplicationStatusHistoryRow } from "@/types";
 
 type ApplicationDetail = {
   id: string;
+  applicant_id: string;
   type: ApplicationTypeKey;
   status: ApplicationStatus;
   form_data: Record<string, unknown> | null;
   resume_path: string | null;
   submitted_at: string | null;
-  applicant: { full_name: string | null; email: string } | null;
+  applicant: {
+    full_name: string | null;
+    email: string;
+    school: string | null;
+    github_url: string | null;
+  } | null;
 };
+
+type TeamInfo = { name: string; join_code: string } | null;
 
 type Scores = { technical: number; creativity: number; impact: number };
 
@@ -53,7 +61,7 @@ export default async function ApplicationDetailPage({
   const { data: application } = await supabase
     .from("applications")
     .select(
-      "id, type, status, form_data, resume_path, submitted_at, applicant:profiles!applications_applicant_id_fkey(full_name, email)"
+      "id, applicant_id, type, status, form_data, resume_path, submitted_at, applicant:profiles!applications_applicant_id_fkey(full_name, email, school, github_url)"
     )
     .eq("id", id)
     .returns<ApplicationDetail[]>()
@@ -62,6 +70,21 @@ export default async function ApplicationDetailPage({
   if (!application) {
     notFound();
   }
+
+  // Team membership — organizers reviewing a hacker application often need
+  // to know who else is on the team, not just the individual applicant.
+  const { data: membership } = await supabase
+    .from("team_members")
+    .select("teams(name, join_code)")
+    .eq("user_id", application.applicant_id)
+    .returns<
+      {
+        teams: { name: string; join_code: string } | { name: string; join_code: string }[] | null;
+      }[]
+    >()
+    .maybeSingle();
+  const teamRaw = membership?.teams;
+  const team: TeamInfo = Array.isArray(teamRaw) ? (teamRaw[0] ?? null) : (teamRaw ?? null);
 
   const config = APPLICATION_TYPES[application.type];
   const formData = application.form_data ?? {};
@@ -154,6 +177,56 @@ export default async function ApplicationDetailPage({
         <StatusBadge status={application.status} />
       </div>
 
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
+          Applicant
+        </h2>
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <dt className="text-2xs text-muted-foreground">Email</dt>
+            <dd className="text-sm">{application.applicant?.email ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-2xs text-muted-foreground">School</dt>
+            <dd className="text-sm">
+              {application.applicant?.school || "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-2xs text-muted-foreground">GitHub</dt>
+            <dd className="text-sm">
+              {application.applicant?.github_url ? (
+                <a
+                  href={application.applicant.github_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sunset underline"
+                >
+                  {application.applicant.github_url}
+                </a>
+              ) : (
+                "—"
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-2xs text-muted-foreground">Team</dt>
+            <dd className="text-sm">
+              {team ? (
+                <>
+                  {team.name}{" "}
+                  <span className="text-2xs text-muted-foreground">
+                    (code {team.join_code})
+                  </span>
+                </>
+              ) : (
+                "Not on a team"
+              )}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
       <DecisionButtons
         applicationId={application.id}
         currentStatus={application.status}
@@ -179,7 +252,7 @@ export default async function ApplicationDetailPage({
             ))}
         </dl>
 
-        {resumeUrl && (
+        {resumeUrl ? (
           <a
             href={resumeUrl}
             target="_blank"
@@ -188,6 +261,12 @@ export default async function ApplicationDetailPage({
           >
             View resume
           </a>
+        ) : (
+          application.type === "hacker" && (
+            <p className="mt-4 text-2xs text-muted-foreground">
+              No resume uploaded yet.
+            </p>
+          )
         )}
       </div>
 

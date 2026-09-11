@@ -73,21 +73,49 @@ export async function uploadResumeAction(
     return { error: uploadError.message };
   }
 
-  const { error } = await supabase
+  // Find any existing hacker application row first — we need to know
+  // whether to update it or create one, and (if it exists) whether its
+  // status even allows an update. Applicants can only touch draft/submitted
+  // rows (see 0001's RLS), so an update against a decided/under_review row
+  // would match zero rows and *look* successful without actually linking
+  // the resume anywhere — that's the bug this replaces.
+  const { data: existing } = await supabase
     .from("applications")
-    .update({ resume_path: path })
+    .select("id, status")
     .eq("applicant_id", user.id)
-    .eq("type", "hacker");
+    .eq("type", "hacker")
+    .maybeSingle();
 
-  if (error) {
-    // Resume file is stored; linking to an application may fail if none exists yet.
+  if (!existing) {
+    // No hacker application yet — start one as a draft so the resume has
+    // somewhere to live and is actually visible to organizers, instead of
+    // sitting orphaned in Storage with no application row pointing at it.
+    const { error } = await supabase.from("applications").insert({
+      applicant_id: user.id,
+      type: "hacker",
+      status: "draft",
+      form_data: {},
+      resume_path: path,
+    });
+    if (error) return { error: error.message };
+  } else if (existing.status === "draft" || existing.status === "submitted") {
+    const { error } = await supabase
+      .from("applications")
+      .update({ resume_path: path })
+      .eq("id", existing.id);
+    if (error) return { error: error.message };
+  } else {
+    // Application has moved past submitted (under review or decided) —
+    // applicants can no longer edit it, so say so plainly instead of
+    // reporting success while nothing actually changed.
     return {
-      ok: true,
-      error: undefined,
+      error:
+        "Your hacker application has already moved past the stage where you can update your resume. The file was uploaded, but contact an organizer to attach it.",
     };
   }
 
   revalidatePath("/settings");
   revalidatePath("/apply");
+  revalidatePath("/dashboard");
   return { ok: true };
 }
