@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTypes";
 import { updateCapacityTargets } from "@/app/organizer/analytics/actions";
 import { capacityProgressLabel } from "@/lib/organizer-ops";
+import { RingProgress } from "@/components/viz/ring-progress";
+import { useToast } from "@/components/shell/toast-provider";
 
 type TargetState = {
   type: ApplicationTypeKey;
@@ -15,6 +17,7 @@ type TargetState = {
 
 export function CapacityTargetsCard({ targets }: { targets: TargetState[] }) {
   const [isPending, startTransition] = useTransition();
+  const { push } = useToast();
 
   return (
     <section className="flex flex-col gap-5 rounded-xl border border-line bg-surface p-6">
@@ -28,34 +31,26 @@ export function CapacityTargetsCard({ targets }: { targets: TargetState[] }) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         {targets.map((row) => {
           const label = APPLICATION_TYPES[row.type]?.label ?? row.type;
-          const pct =
-            row.target > 0
-              ? Math.min(100, (row.accepted / row.target) * 100)
-              : 0;
           const over = row.target > 0 && row.accepted > row.target;
           return (
-            <div key={row.type} className="flex flex-col gap-1.5">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-2xs text-ink-soft">
-                  {capacityProgressLabel(label, row.accepted, row.target)}
-                </span>
-                <span
-                  className={`font-display text-sm font-semibold tabular-nums ${
-                    over ? "text-brick" : "text-ink"
-                  }`}
-                >
-                  {Math.round(pct)}%
-                </span>
-              </div>
-              <div className="h-2 w-full rounded-chip bg-paper">
-                <div
-                  className={`h-2 rounded-chip ${over ? "bg-brick" : "bg-mint"}`}
-                  style={{ width: `${Math.max(pct, row.accepted > 0 ? 2 : 0)}%` }}
-                />
-              </div>
+            <div
+              key={row.type}
+              className="flex items-center gap-3 rounded-chip border border-line bg-paper/60 px-3 py-2.5"
+            >
+              <RingProgress
+                value={row.accepted}
+                max={Math.max(row.target, 1)}
+                size={36}
+                fillClassName={
+                  over
+                    ? "stroke-[var(--color-brick)]"
+                    : "stroke-[var(--color-mint)]"
+                }
+                label={capacityProgressLabel(label, row.accepted, row.target)}
+              />
             </div>
           );
         })}
@@ -64,7 +59,15 @@ export function CapacityTargetsCard({ targets }: { targets: TargetState[] }) {
       <form
         action={(fd) => {
           startTransition(async () => {
-            await updateCapacityTargets(fd);
+            try {
+              await updateCapacityTargets(fd);
+              push("success", "Capacity targets saved.");
+            } catch (err) {
+              push(
+                "error",
+                err instanceof Error ? err.message : "Could not save targets."
+              );
+            }
           });
         }}
         className="flex flex-wrap items-end gap-3 border-t border-line pt-4"

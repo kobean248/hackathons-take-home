@@ -301,7 +301,8 @@
   filter: blur(80px);
   opacity: 0.22;
   animation: ambient-drift 55s ease-in-out infinite;
-  will-change: transform;
+  will-change: transform, translate;
+  transition: translate 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ambient-blob--subtle {
   opacity: 0.035;
@@ -415,5 +416,149 @@
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;
+  }
+}
+
+/* ===========================================================
+   Glass surfaces — frosted panels over the ambient layer.
+   Use on nav + hero cards; keep dense tables/forms opaque.
+   =========================================================== */
+.glass {
+  background: color-mix(in oklch, var(--color-surface) 78%, transparent);
+  border: 1px solid color-mix(in oklch, var(--color-line) 70%, transparent);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+.glass-dark {
+  background: color-mix(in oklch, var(--color-navy-950) 72%, transparent);
+  border-color: color-mix(in oklch, var(--color-navy-600) 55%, transparent);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
+.glass-nav {
+  background: color-mix(in oklch, var(--color-navy-950) 78%, transparent);
+  border-bottom: 1px solid
+    color-mix(in oklch, var(--color-navy-600) 50%, transparent);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+/* ===========================================================
+   Motion system — page enter + staggered card fade-up.
+   =========================================================== */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: fade-up 200ms ease-out both;
+}
+.stagger-in > * {
+  animation: fade-up 280ms ease-out both;
+}
+.stagger-in > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger-in > *:nth-child(2) {
+  animation-delay: 45ms;
+}
+.stagger-in > *:nth-child(3) {
+  animation-delay: 90ms;
+}
+.stagger-in > *:nth-child(4) {
+  animation-delay: 135ms;
+}
+.stagger-in > *:nth-child(5) {
+  animation-delay: 180ms;
+}
+.stagger-in > *:nth-child(6) {
+  animation-delay: 225ms;
+}
+.stagger-in > *:nth-child(7) {
+  animation-delay: 270ms;
+}
+.stagger-in > *:nth-child(8) {
+  animation-delay: 315ms;
+}
+.stagger-in > *:nth-child(9) {
+  animation-delay: 360ms;
+}
+.stagger-in > *:nth-child(10) {
+  animation-delay: 405ms;
+}
+.stagger-in > *:nth-child(11) {
+  animation-delay: 450ms;
+}
+.stagger-in > *:nth-child(12) {
+  animation-delay: 495ms;
+}
+.card-enter {
+  animation: fade-up 280ms ease-out both;
+}
+.card-lift {
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklch, var(--color-sunset) 45%, var(--color-line));
+  box-shadow: 0 8px 20px rgba(10, 14, 31, 0.06);
+}
+.pressable {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.pressable:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.focus-ring-anim {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.focus-ring-anim:focus-visible {
+  border-color: var(--color-sunset);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-sunset) 28%, transparent);
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.bar-grow {
+  transform-origin: left center;
+  animation: bar-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes ring-draw {
+  from {
+    stroke-dashoffset: var(--ring-circumference);
+  }
+}
+.ring-draw {
+  animation: ring-draw 800ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .stagger-in > *,
+  .card-enter,
+  .bar-grow,
+  .ring-draw {
+    animation: none;
+  }
+  .card-lift:hover,
+  .pressable:active:not(:disabled) {
+    transform: none;
   }
 }

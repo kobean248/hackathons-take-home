@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PublicNav } from "@/components/shell/public-nav";
 import { PortalBanner } from "@/components/shell/portal-banner";
+import { AnimatedPage } from "@/components/motion/animated-page";
 import type { AppRole } from "@/types";
 
 export default async function PublicLayout({
@@ -24,10 +25,12 @@ export default async function PublicLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-navy-950 text-white">
+    <div className="flex min-h-screen flex-col bg-navy-950/95 text-white">
       {user ? <PortalBanner role={role} /> : null}
       <PublicNav signedIn={Boolean(user)} />
-      <div className="flex-1">{children}</div>
+      <div className="relative z-10 flex-1">
+        <AnimatedPage stagger={false}>{children}</AnimatedPage>
+      </div>
     </div>
   );
 }

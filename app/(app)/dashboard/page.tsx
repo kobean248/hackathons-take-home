@@ -11,6 +11,8 @@ import { Countdown } from "@/components/countdown/countdown";
 import { AcceptanceNextSteps } from "@/components/dashboard/acceptance-next-steps";
 import { QuickStatCard } from "@/components/dashboard/quick-stat-card";
 import { ApplicationsIcon, QueueIcon, TeamsIcon } from "@/components/icons";
+import { CountUp } from "@/components/count-up";
+import { RingProgress } from "@/components/viz/ring-progress";
 import {
   BearCelebrating,
   BearFlying,
@@ -220,7 +222,7 @@ export default async function DashboardPage({
         </Link>
       )}
 
-      <section className="relative overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
+      <section className="glass relative overflow-hidden rounded-xl p-6 sm:p-8">
         <div
           className="pointer-events-none absolute -right-4 -bottom-10 h-[140%] opacity-[0.14] sm:-right-2 sm:h-[160%] sm:opacity-[0.18]"
           style={{
@@ -258,11 +260,18 @@ export default async function DashboardPage({
           icon={<ApplicationsIcon className="size-5" />}
           label="Your applications"
           value={
-            apps.length === 0
-              ? "None yet"
-              : draftCount > 0
-                ? `${draftCount} draft${draftCount === 1 ? "" : "s"}`
-                : `${apps.length} in progress`
+            apps.length === 0 ? (
+              "None yet"
+            ) : draftCount > 0 ? (
+              <>
+                <CountUp value={draftCount} /> draft
+                {draftCount === 1 ? "" : "s"}
+              </>
+            ) : (
+              <>
+                <CountUp value={apps.length} /> in progress
+              </>
+            )
           }
           href="/apply"
           cta="Manage"
@@ -284,9 +293,13 @@ export default async function DashboardPage({
           icon={<QueueIcon className="size-5" />}
           label="Upcoming"
           value={
-            daysUntilDeadline > 0
-              ? `Priority due in ${daysUntilDeadline}d`
-              : "Priority round closed"
+            daysUntilDeadline > 0 ? (
+              <>
+                Priority due in <CountUp value={daysUntilDeadline} />d
+              </>
+            ) : (
+              "Priority round closed"
+            )
           }
           href="/apply"
           cta="View deadline"
@@ -379,13 +392,20 @@ export default async function DashboardPage({
                   )}
 
                   {showReview && (
-                    <p className="text-sm text-ink-soft">
-                      <span className="font-medium text-ink">
-                        {progress!.done} of {progress!.total} reviews complete
+                    <div className="flex items-center gap-3 text-sm text-ink-soft">
+                      <RingProgress
+                        value={progress!.done}
+                        max={progress!.total}
+                        size={32}
+                      />
+                      <span>
+                        <span className="font-medium text-ink">
+                          Reviews in progress
+                        </span>
+                        {" — "}
+                        reviewers are scoring your application now.
                       </span>
-                      {" — "}
-                      reviewers are scoring your application now.
-                    </p>
+                    </div>
                   )}
 
                   {app.status === "accepted" && (

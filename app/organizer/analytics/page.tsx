@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTypes";
 import { CapacityTargetsCard } from "@/components/organizer/capacity-targets-card";
 import { OrganizerEmpty } from "@/components/organizer/organizer-empty";
+import { AnimatedBarChart } from "@/components/viz/animated-bar-chart";
+import { MiniSparkline } from "@/components/viz/mini-sparkline";
+import { CountUp } from "@/components/count-up";
 import type { ApplicationStatus } from "@/types";
 
 const TYPES = Object.keys(APPLICATION_TYPES) as ApplicationTypeKey[];
@@ -149,9 +152,49 @@ export default async function AnalyticsPage() {
     };
   });
 
+  // Score distribution buckets (raw avg 0–30 → 6 bins)
+  const bins = [0, 0, 0, 0, 0, 0];
+  const binLabels = ["0–5", "5–10", "10–15", "15–20", "20–25", "25–30"];
+  for (const row of scoreRows) {
+    if (row.rawAvg === null) continue;
+    const idx = Math.min(5, Math.floor(row.rawAvg / 5));
+    bins[idx]! += 1;
+  }
+  const hasScoreDist = bins.some((n) => n > 0);
+
+  const totalApps = (allApps ?? []).length;
+  const submittedish = (allApps ?? []).filter((a) =>
+    FUNNEL_STAGES.includes(a.status as ApplicationStatus)
+  ).length;
+
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-display text-h2 font-semibold text-ink">Analytics</h1>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <h1 className="font-display text-h2 font-semibold text-ink">
+          Analytics
+        </h1>
+        <div className="flex items-center gap-6">
+          <div>
+            <p className="text-2xs text-ink-soft">Total apps</p>
+            <p className="font-display text-h3 font-semibold tabular-nums text-ink">
+              <CountUp value={totalApps} />
+            </p>
+          </div>
+          <div>
+            <p className="text-2xs text-ink-soft">In funnel</p>
+            <p className="font-display text-h3 font-semibold tabular-nums text-ink">
+              <CountUp value={submittedish} />
+            </p>
+          </div>
+          {hasScoreDist && (
+            <MiniSparkline
+              values={bins}
+              className="w-24"
+              barClassName="bg-sunset/80"
+            />
+          )}
+        </div>
+      </div>
 
       <CapacityTargetsCard targets={capacityTargets} />
 
@@ -167,58 +210,46 @@ export default async function AnalyticsPage() {
         ) : (
           TYPES.map((type) => {
             const byType = funnel[type];
-            const max = Math.max(1, ...FUNNEL_STAGES.map((s) => byType[s] ?? 0));
             return (
               <div key={type} className="flex flex-col gap-3">
                 <h3 className="text-2xs font-medium text-ink-soft">
                   {APPLICATION_TYPES[type].label}
                 </h3>
-                {FUNNEL_STAGES.map((stage) => {
-                  const count = byType[stage] ?? 0;
-                  const pct = (count / max) * 100;
-                  return (
-                    <div key={stage} className="flex flex-col gap-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-2xs text-ink-soft">
-                          {STAGE_LABEL[stage]}
-                        </span>
-                        <span className="font-display text-sm font-semibold tabular-nums text-ink">
-                          {count}
-                        </span>
-                      </div>
-                      <div className="relative h-7 w-full rounded-chip bg-paper">
-                        {/* thin grid ticks */}
-                        <div
-                          className="pointer-events-none absolute inset-0 flex"
-                          aria-hidden
-                        >
-                          {[25, 50, 75].map((t) => (
-                            <span
-                              key={t}
-                              className="absolute top-0 h-full w-px bg-line"
-                              style={{ left: `${t}%` }}
-                            />
-                          ))}
-                        </div>
-                        <div
-                          className={`relative h-7 rounded-chip ${STAGE_BAR_CLASS[stage]}`}
-                          style={{ width: `${Math.max(pct, count > 0 ? 4 : 0)}%` }}
-                        >
-                          {count > 0 && pct > 18 && (
-                            <span className="absolute inset-y-0 right-2 flex items-center font-display text-2xs font-semibold tabular-nums text-navy-950/80">
-                              {count}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                <AnimatedBarChart
+                  rows={FUNNEL_STAGES.map((stage) => ({
+                    key: stage,
+                    label: STAGE_LABEL[stage],
+                    value: byType[stage] ?? 0,
+                    barClassName: STAGE_BAR_CLASS[stage],
+                  }))}
+                />
               </div>
             );
           })
         )}
       </section>
+
+      {hasScoreDist && (
+        <section className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-6">
+          <div>
+            <h2 className="font-display text-sm font-semibold text-ink">
+              Score distribution
+            </h2>
+            <p className="mt-1 max-w-prose text-2xs text-ink-soft">
+              Raw average buckets across hacker applications with at least one
+              review.
+            </p>
+          </div>
+          <AnimatedBarChart
+            rows={binLabels.map((label, i) => ({
+              key: label,
+              label,
+              value: bins[i]!,
+              barClassName: "bg-sunset",
+            }))}
+          />
+        </section>
+      )}
 
       <section className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-6">
         <h2 className="font-display text-sm font-semibold text-ink">

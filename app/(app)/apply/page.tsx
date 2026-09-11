@@ -71,7 +71,7 @@ export default async function ApplyPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="relative overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
+      <header className="glass relative overflow-hidden rounded-xl p-6 sm:p-8">
         <CatalogSeal className="pointer-events-none absolute -right-3 -top-3 w-24 opacity-90 sm:w-28" />
         <div className="relative z-10">
           <DeadlineChip date={PRIORITY_DEADLINE_LABEL} label="Priority due" />

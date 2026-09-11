@@ -8,6 +8,8 @@ import {
   scoreComparisonCopy,
   type RubricScores,
 } from "@/lib/organizer-ops";
+import { useToast } from "@/components/shell/toast-provider";
+import { MiniSparkline } from "@/components/viz/mini-sparkline";
 
 const LABELS: Record<keyof RubricScores, string> = {
   technical: "Technical",
@@ -32,6 +34,7 @@ export function CalibrationPanel({
   const [revealed, setRevealed] = useState(!!existing);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const { push } = useToast();
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -40,10 +43,12 @@ export function CalibrationPanel({
       try {
         await submitCalibrationAttempt(sampleId, scores);
         setRevealed(true);
+        push("success", "Calibration submitted — gold scores revealed.");
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Something went wrong."
-        );
+        const message =
+          err instanceof Error ? err.message : "Something went wrong.";
+        setError(message);
+        push("error", message);
       }
     });
   }
@@ -92,13 +97,28 @@ export function CalibrationPanel({
           <h3 className="font-display text-sm font-semibold text-ink">
             Compared to gold
           </h3>
-          <ul className="flex flex-col gap-2 text-sm text-ink-soft">
-            {RUBRIC_KEYS.map((key) => (
-              <li key={key}>
-                {scoreComparisonCopy(key, scores[key], goldScores[key])}
-              </li>
-            ))}
-          </ul>
+          <div className="flex items-end justify-between gap-4">
+            <ul className="flex flex-col gap-2 text-sm text-ink-soft">
+              {RUBRIC_KEYS.map((key) => (
+                <li key={key}>
+                  {scoreComparisonCopy(key, scores[key], goldScores[key])}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-[0.65rem] text-ink-soft">You vs gold</span>
+              <MiniSparkline
+                values={RUBRIC_KEYS.map((k) => scores[k])}
+                barClassName="bg-sunset/80"
+                className="w-16"
+              />
+              <MiniSparkline
+                values={RUBRIC_KEYS.map((k) => goldScores[k])}
+                barClassName="bg-cal-gold"
+                className="w-16"
+              />
+            </div>
+          </div>
           {goldComments && (
             <p className="border-t border-line pt-3 text-2xs text-ink-soft">
               <span className="font-medium text-ink">Gold note — </span>

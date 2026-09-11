@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OrganizerNav } from "@/components/organizer/organizer-nav";
+import { AnimatedPage } from "@/components/motion/animated-page";
 
 export default async function OrganizerLayout({
   children,
@@ -30,7 +31,6 @@ export default async function OrganizerLayout({
     );
   }
 
-  // Nav count badges — total applications, and this reviewer's open queue.
   const [{ count: totalCount }, { count: queueCount }] = await Promise.all([
     supabase.from("applications").select("id", { count: "exact", head: true }),
     supabase
@@ -41,7 +41,7 @@ export default async function OrganizerLayout({
   ]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper md:flex-row">
+    <div className="flex min-h-screen flex-col bg-paper/90 md:flex-row">
       <Suspense
         fallback={
           <div className="h-14 shrink-0 bg-navy-950 md:h-auto md:w-56" />
@@ -54,7 +54,9 @@ export default async function OrganizerLayout({
           queueCount={queueCount ?? 0}
         />
       </Suspense>
-      <div className="mx-auto w-full max-w-5xl flex-1 p-6">{children}</div>
+      <div className="mx-auto w-full max-w-5xl flex-1 p-6">
+        <AnimatedPage>{children}</AnimatedPage>
+      </div>
     </div>
   );
 }

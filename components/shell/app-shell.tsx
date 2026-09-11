@@ -1,9 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/shell/app-nav";
+import { AnimatedPage } from "@/components/motion/animated-page";
 import type { AppRole } from "@/types";
 
-// Persistent shell for signed-in applicant work (dashboard + apply).
-// Fetches the profile once so every child page gets the same nav + avatar.
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const {
@@ -25,10 +24,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
+    <div className="flex min-h-screen flex-col bg-paper/90">
       <AppNav email={email} fullName={fullName} role={role} />
       <div className="mx-auto w-full max-w-[960px] flex-1 px-6 py-8">
-        {children}
+        <AnimatedPage>{children}</AnimatedPage>
       </div>
     </div>
   );

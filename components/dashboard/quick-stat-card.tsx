@@ -1,10 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { cn } from "cn";
 
-// Small stat/quick-link card — fills the second row of the dashboard so it
-// doesn't end after one hero card and a lot of empty paper below the fold.
-// `secondary` is an optional second data point (dots, avatars, a trend
-// line) so the card fits its content instead of leaving empty lower space.
 export function QuickStatCard({
   icon,
   label,
@@ -15,7 +12,7 @@ export function QuickStatCard({
 }: {
   icon: ReactNode;
   label: string;
-  value: string;
+  value: ReactNode;
   href: string;
   cta: string;
   secondary?: ReactNode;
@@ -23,7 +20,9 @@ export function QuickStatCard({
   return (
     <Link
       href={href}
-      className="group flex h-fit flex-col gap-3 self-start rounded-xl border border-line bg-surface p-5 transition-colors hover:border-sunset/40"
+      className={cn(
+        "card-lift group flex h-fit flex-col gap-3 self-start rounded-xl border border-line bg-surface p-5"
+      )}
     >
       <span className="flex size-9 items-center justify-center rounded-chip bg-berkeley/8 text-berkeley">
         {icon}

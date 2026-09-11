@@ -128,7 +128,7 @@ export default async function TeamsPage() {
 
   return (
     <main className="flex flex-col gap-8">
-      <section className="relative overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
+      <section className="glass relative overflow-hidden rounded-xl p-6 sm:p-8">
         <BearWaving className="pointer-events-none absolute -right-2 top-2 w-24 opacity-90 sm:right-4 sm:w-28" />
         <CatalogSeal
           topText="TEAM"
