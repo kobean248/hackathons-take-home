@@ -10,7 +10,7 @@ import { Timeline } from "@/components/timeline";
 import { Countdown } from "@/components/countdown/countdown";
 import { AcceptanceNextSteps } from "@/components/dashboard/acceptance-next-steps";
 import { QuickStatCard } from "@/components/dashboard/quick-stat-card";
-import { ApplicationsIcon, QueueIcon, TeamsIcon } from "@/components/icons";
+import { ApplicationsIcon, QueueIcon, ShiftsIcon, TeamsIcon } from "@/components/icons";
 import { CountUp } from "@/components/count-up";
 import { RingProgress } from "@/components/viz/ring-progress";
 import {
@@ -23,6 +23,11 @@ import { CampanileTower } from "@/components/illustrations/berkeley-scenes";
 import { CatalogSeal } from "@/components/brand/catalog-seal";
 import { PortalHero } from "@/components/shell/portal-hero";
 import { Avatar } from "@/components/avatar";
+import {
+  canAccessShifts,
+  canAccessTeams,
+  fetchEventRoles,
+} from "@/lib/event-roles";
 import type { ApplicationRow, ApplicationStatus, AppRole } from "@/types";
 
 // Same semantic mapping as StatusBadge/StatusTimeline — a status dot
@@ -132,14 +137,19 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, role")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, eventRoles] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, role")
+      .eq("id", user.id)
+      .maybeSingle(),
+    fetchEventRoles(supabase, user.id),
+  ]);
 
   const role = profile?.role as AppRole | null | undefined;
   const isStaff = role === "organizer" || role === "reviewer";
+  const showTeams = canAccessTeams(eventRoles);
+  const showShifts = canAccessShifts(eventRoles);
 
   const { data: applications } = await supabase
     .from("applications")
@@ -264,7 +274,7 @@ export default async function DashboardPage({
         </div>
       </PortalHero>
 
-      <div className="grid items-start gap-4 sm:grid-cols-3">
+      <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <QuickStatCard
           icon={<ApplicationsIcon className="size-5" />}
           label="Your applications"
@@ -324,10 +334,21 @@ export default async function DashboardPage({
         <QuickStatCard
           icon={<TeamsIcon className="size-5" />}
           label="Team"
-          value={teamName || "Not on a team yet"}
-          href="/teams"
-          cta={teamName ? "View team" : "Find a team"}
+          value={
+            showTeams
+              ? teamName || "Not on a team yet"
+              : "Unlocks after hacker accept"
+          }
+          href={showTeams ? "/teams" : "/apply/hacker"}
+          cta={
+            showTeams
+              ? teamName
+                ? "View team"
+                : "Find a team"
+              : "Apply as hacker"
+          }
           secondary={
+            showTeams &&
             teammates.length > 0 && (
               <div className="flex -space-x-1.5">
                 {teammates.slice(0, 5).map((t) => (
@@ -343,6 +364,15 @@ export default async function DashboardPage({
             )
           }
         />
+        {showShifts && (
+          <QuickStatCard
+            icon={<ShiftsIcon className="size-5" />}
+            label="Shifts"
+            value="Claim weekend blocks"
+            href="/shifts"
+            cta="Open calendar"
+          />
+        )}
       </div>
 
       {apps.length === 0 ? (
@@ -420,6 +450,7 @@ export default async function DashboardPage({
                   {app.status === "accepted" && (
                     <AcceptanceNextSteps
                       typeLabel={APPLICATION_TYPES[app.type].label}
+                      type={app.type}
                     />
                   )}
                 </div>

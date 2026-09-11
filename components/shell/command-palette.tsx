@@ -225,16 +225,30 @@ export function CommandPaletteHint({ className }: { className?: string }) {
 
 export function buildApplicantCommands(opts: {
   showConsole?: boolean;
+  showTeams?: boolean;
+  showShifts?: boolean;
 }): CommandItem[] {
   const items: CommandItem[] = [
     { id: "dash", label: "Overview", href: "/dashboard", group: "Portal" },
     { id: "apply", label: "Apply", href: "/apply", group: "Portal" },
-    { id: "teams", label: "Teams", href: "/teams", group: "Portal" },
-    { id: "settings", label: "Settings", href: "/settings", group: "Portal" },
-    { id: "home", label: "Home", href: "/", group: "Browse" },
   ];
+  if (opts.showTeams) {
+    items.push({ id: "teams", label: "Teams", href: "/teams", group: "Portal" });
+  }
+  if (opts.showShifts) {
+    items.push({
+      id: "shifts",
+      label: "Shifts",
+      href: "/shifts",
+      group: "Portal",
+    });
+  }
+  items.push(
+    { id: "settings", label: "Settings", href: "/settings", group: "Portal" },
+    { id: "home", label: "Home", href: "/", group: "Browse" }
+  );
   if (opts.showConsole) {
-    items.splice(4, 0, {
+    items.splice(items.length - 1, 0, {
       id: "console",
       label: "Organizer console",
       href: "/organizer/applications",

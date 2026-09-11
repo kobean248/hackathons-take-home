@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import {
   CreateTeamForm,
   JoinTeamForm,
@@ -11,6 +12,7 @@ import { CatalogSeal } from "@/components/brand/catalog-seal";
 import { Avatar } from "@/components/avatar";
 import { PortalHero } from "@/components/shell/portal-hero";
 import { SceneTeamWorkbench } from "@/components/illustrations/berkeley-scenes";
+import { canAccessTeams, fetchEventRoles } from "@/lib/event-roles";
 
 type TeamRow = {
   id: string;
@@ -54,6 +56,16 @@ export default async function TeamsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const roles = await fetchEventRoles(supabase, user!.id);
+  if (!canAccessTeams(roles)) {
+    redirect(
+      "/dashboard?error=" +
+        encodeURIComponent(
+          "Teams unlock after you're accepted as a hacker."
+        )
+    );
+  }
 
   const { data: membership } = await supabase
     .from("team_members")

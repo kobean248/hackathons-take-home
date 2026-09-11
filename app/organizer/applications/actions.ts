@@ -3,6 +3,10 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import {
+  syncEventRoleOnDecision,
+  type EventRole,
+} from "@/lib/event-roles";
 import type { ApplicationStatus } from "@/types";
 
 const DECISION_STATUSES: ApplicationStatus[] = [
@@ -41,6 +45,16 @@ export async function decideApplication(
 
   const { supabase, user } = await requireStaff();
 
+  const { data: app, error: appError } = await supabase
+    .from("applications")
+    .select("id, applicant_id, type")
+    .eq("id", applicationId)
+    .single();
+
+  if (appError || !app) {
+    throw new Error(appError?.message ?? "Application not found.");
+  }
+
   const { error } = await supabase
     .from("applications")
     .update({
@@ -66,9 +80,20 @@ export async function decideApplication(
     throw new Error(historyError.message);
   }
 
+  await syncEventRoleOnDecision(supabase, {
+    applicantId: app.applicant_id,
+    applicationId: app.id,
+    type: app.type as EventRole,
+    status,
+    grantedBy: user.id,
+  });
+
   revalidatePath(`/organizer/applications/${applicationId}`);
   revalidatePath("/organizer/applications");
   revalidatePath("/organizer/analytics");
+  revalidatePath("/dashboard");
+  revalidatePath("/teams");
+  revalidatePath("/shifts");
 }
 
 /** Bulk accept / waitlist / reject — organizers only. */
@@ -90,6 +115,16 @@ export async function decideApplicationsBulk(
   }
 
   const now = new Date().toISOString();
+
+  const { data: apps, error: fetchError } = await supabase
+    .from("applications")
+    .select("id, applicant_id, type")
+    .in("id", ids);
+
+  if (fetchError) {
+    throw new Error(fetchError.message);
+  }
+
   const { error, count } = await supabase
     .from("applications")
     .update(
@@ -121,8 +156,21 @@ export async function decideApplicationsBulk(
     throw new Error(historyError.message);
   }
 
+  for (const app of apps ?? []) {
+    await syncEventRoleOnDecision(supabase, {
+      applicantId: app.applicant_id,
+      applicationId: app.id,
+      type: app.type as EventRole,
+      status,
+      grantedBy: user.id,
+    });
+  }
+
   revalidatePath("/organizer/applications");
   revalidatePath("/organizer/analytics");
+  revalidatePath("/dashboard");
+  revalidatePath("/teams");
+  revalidatePath("/shifts");
   return { updated: count ?? ids.length };
 }
 

@@ -16,6 +16,7 @@ dev_plan.md
 design-doc.md
 .claude
 .agents
+.mcp.json
 # next.js
 /.next/
 /out/

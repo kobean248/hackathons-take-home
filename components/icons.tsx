@@ -328,3 +328,26 @@ export function AuditIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+export function ShiftsIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <rect x="3.5" y="5" width="17" height="15" rx="2" />
+      <path d="M8 3.5v3" />
+      <path d="M16 3.5v3" />
+      <path d="M3.5 10h17" />
+      <path d="M8 14h3" />
+      <path d="M13 14h3" />
+      <path d="M8 17h3" />
+    </svg>
+  );
+}

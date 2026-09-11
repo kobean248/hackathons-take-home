@@ -53,6 +53,7 @@ export default async function NextStepsPage() {
           <AcceptanceNextSteps
             key={app.id}
             typeLabel={APPLICATION_TYPES[app.type].label}
+            type={app.type}
           />
         ))
       )}

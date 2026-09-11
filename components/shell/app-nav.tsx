@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ApplyIcon, OverviewIcon, SettingsIcon, TeamsIcon } from "@/components/icons";
+import {
+  ApplyIcon,
+  OverviewIcon,
+  SettingsIcon,
+  ShiftsIcon,
+  TeamsIcon,
+} from "@/components/icons";
 import { UserMenu } from "@/components/shell/user-menu";
 import { CountdownNavChip } from "@/components/countdown/countdown";
 import { CampanileMark } from "@/components/brand/wordmark";
@@ -12,28 +18,42 @@ import {
   CommandPaletteHint,
   buildApplicantCommands,
 } from "@/components/shell/command-palette";
+import { canAccessShifts, canAccessTeams, type EventRole } from "@/lib/event-roles";
 import type { AppRole } from "@/types";
-
-const NAV = [
-  { href: "/dashboard", label: "Overview", icon: OverviewIcon },
-  { href: "/apply", label: "Apply", icon: ApplyIcon },
-  { href: "/teams", label: "Teams", icon: TeamsIcon },
-  { href: "/settings", label: "Settings", icon: SettingsIcon },
-] as const;
 
 export function AppNav({
   email,
   fullName,
   role,
+  eventRoles = [],
 }: {
   email: string;
   fullName?: string | null;
   role?: AppRole | null;
+  eventRoles?: EventRole[];
 }) {
   const pathname = usePathname();
   const showConsole = role === "organizer" || role === "reviewer";
+  const showTeams = canAccessTeams(eventRoles);
+  const showShifts = canAccessShifts(eventRoles);
 
-  const pills = NAV.map(({ href, label, icon: Icon }) => {
+  const nav: {
+    href: string;
+    label: string;
+    icon: typeof OverviewIcon;
+  }[] = [
+    { href: "/dashboard", label: "Overview", icon: OverviewIcon },
+    { href: "/apply", label: "Apply", icon: ApplyIcon },
+  ];
+  if (showTeams) {
+    nav.push({ href: "/teams", label: "Teams", icon: TeamsIcon });
+  }
+  if (showShifts) {
+    nav.push({ href: "/shifts", label: "Shifts", icon: ShiftsIcon });
+  }
+  nav.push({ href: "/settings", label: "Settings", icon: SettingsIcon });
+
+  const pills = nav.map(({ href, label, icon: Icon }) => {
     const active =
       href === "/dashboard"
         ? pathname === "/dashboard" || pathname.startsWith("/dashboard/")
@@ -82,11 +102,19 @@ export function AppNav({
               email={email}
               fullName={fullName}
               showOrganizerLink={showConsole}
+              showTeams={showTeams}
+              showShifts={showShifts}
             />
           </div>
         </div>
       </header>
-      <CommandPalette items={buildApplicantCommands({ showConsole })} />
+      <CommandPalette
+        items={buildApplicantCommands({
+          showConsole,
+          showTeams,
+          showShifts,
+        })}
+      />
     </>
   );
 }

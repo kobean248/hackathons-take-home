@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { CatalogSeal } from "@/components/brand/catalog-seal";
+import type { ApplicationTypeKey } from "@/lib/applicationTypes";
+import { canAccessShifts, canAccessTeams } from "@/lib/event-roles";
 
 const STEPS = [
   {
@@ -23,9 +25,22 @@ const STEPS = [
 
 export function AcceptanceNextSteps({
   typeLabel,
+  type,
 }: {
   typeLabel: string;
+  type: ApplicationTypeKey;
 }) {
+  const portal =
+    type === "hacker"
+      ? { href: "/teams", label: "Find a team", blurb: "Form or join a squad for the weekend." }
+      : canAccessShifts([type])
+        ? {
+            href: "/shifts",
+            label: "Pick your shifts",
+            blurb: "Claim mentor, volunteer, or judge blocks on the weekend calendar.",
+          }
+        : null;
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-mint/35 bg-mint/8 p-4 sm:p-5">
       <CatalogSeal
@@ -41,6 +56,15 @@ export function AcceptanceNextSteps({
       <p className="mt-1 text-2xs text-ink-soft">
         Next steps before the weekend — details also go to your email.
       </p>
+      {portal && (
+        <Link
+          href={portal.href}
+          className="mt-3 flex flex-col rounded-lg border border-mint/30 bg-surface/80 px-3 py-2.5 transition-colors hover:border-sunset/40"
+        >
+          <span className="text-sm font-medium text-sunset">{portal.label} →</span>
+          <span className="text-2xs text-ink-soft">{portal.blurb}</span>
+        </Link>
+      )}
       <ol className="mt-4 space-y-4">
         {STEPS.map((step, i) => (
           <li key={step.title} className="flex gap-3">
@@ -73,3 +97,6 @@ export function AcceptanceNextSteps({
     </div>
   );
 }
+
+/** Keep canAccessTeams imported for type narrowing clarity in callers. */
+void canAccessTeams;

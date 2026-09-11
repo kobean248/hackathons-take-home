@@ -20,10 +20,14 @@ export function UserMenu({
   email,
   fullName,
   showOrganizerLink = false,
+  showTeams = false,
+  showShifts = false,
 }: {
   email: string;
   fullName?: string | null;
   showOrganizerLink?: boolean;
+  showTeams?: boolean;
+  showShifts?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -88,14 +92,26 @@ export function UserMenu({
           >
             Overview
           </Link>
-          <Link
-            href="/teams"
-            role="menuitem"
-            className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-paper"
-            onClick={() => setOpen(false)}
-          >
-            Teams
-          </Link>
+          {showTeams && (
+            <Link
+              href="/teams"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-paper"
+              onClick={() => setOpen(false)}
+            >
+              Teams
+            </Link>
+          )}
+          {showShifts && (
+            <Link
+              href="/shifts"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left text-sm text-ink hover:bg-paper"
+              onClick={() => setOpen(false)}
+            >
+              Shifts
+            </Link>
+          )}
           <Link
             href="/settings"
             role="menuitem"
