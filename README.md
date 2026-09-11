@@ -46,9 +46,7 @@ route protection lives in `proxy.ts`, not `middleware.ts`.
      Never expose this to the client.
 
 4. **Run the migrations** (in `supabase/migrations/`, applied in order —
-   `0001_init.sql`, `0002_resumes_bucket.sql`,
-   `0003_reviews_organizer_grading.sql`,
-   `0004_reviewer_complete_assignment.sql`):
+   `0001_init.sql` through `0006_teams.sql`):
 
    ```bash
    supabase link --project-ref <your-project-ref>
@@ -217,11 +215,17 @@ tables (own folder only, organizers can read all).
 ## Route map
 
 ```
-/                              landing
+/                              marketing landing (public)
+/about, /schedule, /faq,
+/sponsors, /tracks             public marketing pages
 /login, /signup                auth (email/password + Google)
+
 /dashboard                     applicant: application cards + status timeline
+/dashboard/next-steps          post-acceptance checklist
 /apply                         type picker (Hacker / Mentor / Volunteer)
 /apply/[type]                  the actual form
+/teams                         create/join team + looking-for-teammates board
+/settings                      profile + resume re-upload
 
 /organizer                     -> redirects to /organizer/applications
 /organizer/applications        table: all applications, filter/search
@@ -231,9 +235,12 @@ tables (own folder only, organizers can read all).
 /organizer/analytics           funnel per type + normalized hacker scores
 ```
 
-`/dashboard` and `/organizer/*` are gated in `proxy.ts` (session + role);
-`/apply/*` and `/organizer/*` also re-check in their own layout, since a
-Server Component shouldn't lean on the proxy alone.
+Public marketing lives under the `(public)` route group with `<PublicNav>`;
+the applicant portal under `(app)` with `<AppNav>`. Organizer keeps its own
+sidebar shell. `/dashboard`, `/apply`, `/teams`, `/settings`, and
+`/organizer/*` are gated in `proxy.ts` (session + role); signed-in users can
+still browse `/` and other public pages — they get a “Go to dashboard”
+banner instead of a force redirect.
 
 ## Design decisions
 
@@ -267,14 +274,16 @@ data — the database enforces it independent of which code path reaches it
 - Migrations haven't been applied to a real Supabase project in this
   environment (no Docker/CLI login available while building this) — run
   them yourself per Setup step 4 before expecting anything to work.
+  That includes `0002_resumes_bucket.sql` (resume uploads),
+  `0005_portal_stats.sql` (landing stats strip), and
+  `0006_teams.sql` (team formation + profile self-update for `/settings`).
+- To open the organizer console, promote your profile in SQL:
+  `update profiles set role = 'organizer' where email = 'you@…';`
+  Organizers/reviewers then get a **Console** chip in the applicant nav
+  and are redirected to `/organizer/applications` after sign-in.
 - The signup email template (step 5) and the Google OAuth provider
   (step 6) both need to be turned on manually in the Supabase dashboard —
   nothing in code can do either part.
-- Visual design currently uses placeholder shadcn styling plus a light
-  branding pass (navy landing page, pill nav, footer, consistent
-  loading/error states). `design-doc.md` (git-ignored, local only) has the
-  full flat/navy/sunset-orange visual system for a dedicated follow-up pass
-  once functionality has been tested end-to-end.
 - At real scale (the plan's own "50,000 applications" thought experiment),
   the first things to revisit would be `assignNextBatch`'s in-memory
   "already assigned" set (`app/organizer/reviewers/actions.ts`) — that
