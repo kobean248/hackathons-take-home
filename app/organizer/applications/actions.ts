@@ -92,5 +92,17 @@ export async function submitReview(
     throw new Error(error.message);
   }
 
+  // Marks the reviewer's own assignment complete so /organizer/reviewers'
+  // open/completed counts mean something. A no-op if this reviewer wasn't
+  // formally assigned (e.g. an organizer grading directly) — the update
+  // just matches zero rows.
+  await supabase
+    .from("review_assignments")
+    .update({ completed_at: new Date().toISOString() })
+    .eq("application_id", applicationId)
+    .eq("reviewer_id", user.id)
+    .is("completed_at", null);
+
   revalidatePath(`/organizer/applications/${applicationId}`);
+  revalidatePath("/organizer/reviewers");
 }
