@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type Path } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import {
   APPLICATION_TYPES,
@@ -21,6 +23,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
   // File objects can't live in react-hook-form's (zod-validated) state or in
   // the form_data jsonb column, so selected files are tracked separately,
   // keyed by field name, and uploaded to Storage in persist().
@@ -34,8 +37,12 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
   const fieldErrors = errors as Record<string, { message?: string } | undefined>;
 
-  async function persist(values: FormValues, status: "draft" | "submitted") {
+  async function persist(
+    values: FormValues,
+    status: "draft" | "submitted"
+  ): Promise<boolean> {
     setFormError(null);
+    setSavedAt(null);
     const supabase = createClient();
     const {
       data: { user },
@@ -43,7 +50,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
 
     if (!user) {
       setFormError("You must be signed in.");
-      return;
+      return false;
     }
 
     // The only file field today is "resume", which has a dedicated
@@ -63,7 +70,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
       setUploading(false);
       if (uploadError) {
         setFormError(uploadError.message);
-        return;
+        return false;
       }
       resumePath = path;
     }
@@ -88,7 +95,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
 
     if (error) {
       setFormError(error.message);
-      return;
+      return false;
     }
 
     if (status === "submitted" && application) {
@@ -101,48 +108,53 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
         });
       if (historyError) {
         setFormError(historyError.message);
-        return;
+        return false;
       }
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    return true;
   }
 
   // Save draft intentionally skips required-field validation — a draft is
   // allowed to be incomplete. getValues() reads whatever's in the form as-is.
+  // Stays on the page and shows a flat mint "autosave" dot rather than
+  // navigating away, per design-doc.md §7.
   async function onSaveDraft() {
-    await persist(getValues(), "draft");
+    const ok = await persist(getValues(), "draft");
+    if (ok) setSavedAt(new Date());
   }
 
-  const onSubmitForm = handleSubmit((values) => persist(values, "submitted"));
+  const onSubmitForm = handleSubmit(async (values) => {
+    const ok = await persist(values, "submitted");
+    if (ok) {
+      router.push("/dashboard");
+      router.refresh();
+    }
+  });
 
   return (
     <form onSubmit={onSubmitForm} noValidate className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">{config.label} Application</h2>
+      <h2 className="font-display text-h2 font-semibold">
+        {config.label} Application
+      </h2>
 
       {formError && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+        <p className="rounded-chip bg-brick/10 px-3 py-2 text-sm text-brick">
           {formError}
         </p>
       )}
 
       {config.fields.map((field) => (
-        <label key={field.name} className="flex flex-col gap-1 text-sm">
+        <label key={field.name} className="flex flex-col gap-1.5 text-sm">
           {field.label}
 
           {field.type === "textarea" ? (
-            <textarea
-              rows={4}
-              className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145] dark:bg-transparent"
-              {...register(field.name as Path<FormValues>)}
-            />
+            <Textarea rows={4} {...register(field.name as Path<FormValues>)} />
           ) : field.type === "file" ? (
             <>
-              <input
+              <Input
                 type="file"
                 accept="application/pdf"
-                className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145] dark:bg-transparent"
                 onChange={(e) =>
                   setFiles((prev) => ({
                     ...prev,
@@ -151,15 +163,14 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
                 }
               />
               {files[field.name] && (
-                <span className="text-xs text-zinc-500">
+                <span className="text-2xs text-muted-foreground">
                   Selected: {files[field.name]!.name}
                 </span>
               )}
             </>
           ) : (
-            <input
+            <Input
               type={field.type === "number" ? "number" : "text"}
-              className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145] dark:bg-transparent"
               {...register(field.name as Path<FormValues>, {
                 valueAsNumber: field.type === "number",
               })}
@@ -167,14 +178,14 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
           )}
 
           {fieldErrors[field.name]?.message && (
-            <span className="text-xs text-red-600 dark:text-red-400">
+            <span className="text-2xs text-brick">
               {fieldErrors[field.name]?.message}
             </span>
           )}
         </label>
       ))}
 
-      <div className="flex gap-3">
+      <div className="flex items-center gap-3">
         <Button
           type="button"
           variant="outline"
@@ -186,6 +197,12 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
         <Button type="submit" disabled={isSubmitting || uploading}>
           {uploading ? "Uploading…" : isSubmitting ? "Submitting…" : "Submit"}
         </Button>
+        {savedAt && (
+          <span className="flex items-center gap-1.5 text-2xs text-mint">
+            <span className="size-1.5 rounded-full bg-mint" />
+            Saved {savedAt.toLocaleTimeString()}
+          </span>
+        )}
       </div>
     </form>
   );

@@ -22,7 +22,7 @@ export default async function ApplyLayout({
     <div className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 p-6">
       <Link
         href="/dashboard"
-        className="self-start text-sm text-zinc-500 hover:text-foreground"
+        className="self-start text-sm text-muted-foreground hover:text-foreground"
       >
         ← Back to dashboard
       </Link>

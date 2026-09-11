@@ -9,6 +9,8 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: "Rejected",
 };
 
+// Node-and-line timeline, flattened: solid dots on a solid line, no glow
+// or blur — see design-doc.md §7 (Applicant dashboard row).
 export function StatusTimeline({
   history,
 }: {
@@ -16,23 +18,33 @@ export function StatusTimeline({
 }) {
   if (history.length === 0) {
     return (
-      <p className="text-xs text-zinc-500">No status changes recorded yet.</p>
+      <p className="text-2xs text-muted-foreground">
+        No status changes recorded yet.
+      </p>
     );
   }
 
   return (
-    <ol className="flex flex-col gap-2 border-l border-black/[.08] pl-3 dark:border-white/[.145]">
-      {history.map((entry) => (
-        <li key={entry.id} className="text-xs">
-          <span className="font-medium">
-            {STATUS_LABELS[entry.status] ?? entry.status}
-          </span>{" "}
-          <span className="text-zinc-500">
-            {new Date(entry.changed_at).toLocaleString()}
+    <ol className="flex flex-col gap-3">
+      {history.map((entry, i) => (
+        <li key={entry.id} className="relative flex gap-3 pl-1">
+          <span className="relative flex w-3 shrink-0 flex-col items-center">
+            <span className="mt-1 size-2 shrink-0 rounded-full bg-mint" />
+            {i < history.length - 1 && (
+              <span className="mt-1 w-px flex-1 bg-border" />
+            )}
           </span>
-          {entry.note && (
-            <p className="text-zinc-500">{entry.note}</p>
-          )}
+          <span className="pb-3 text-2xs">
+            <span className="font-medium text-foreground">
+              {STATUS_LABELS[entry.status] ?? entry.status}
+            </span>{" "}
+            <span className="text-muted-foreground">
+              {new Date(entry.changed_at).toLocaleString()}
+            </span>
+            {entry.note && (
+              <p className="text-muted-foreground">{entry.note}</p>
+            )}
+          </span>
         </li>
       ))}
     </ol>

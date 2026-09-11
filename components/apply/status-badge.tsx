@@ -1,15 +1,15 @@
 import type { ApplicationStatus } from "@/types";
 
+// Flat fill at ~12% opacity of the status color + full-opacity text of
+// that same color — no outline+fill combos, no icons in the badge. Status
+// is never color-only: the label always carries the word too.
 const STATUS_STYLES: Record<ApplicationStatus, string> = {
-  draft: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-  submitted: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  under_review:
-    "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-  accepted:
-    "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
-  waitlisted:
-    "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
-  rejected: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
+  draft: "bg-ink-soft/10 text-ink-soft",
+  submitted: "bg-sky/12 text-sky",
+  under_review: "bg-amber/12 text-amber",
+  accepted: "bg-mint/12 text-mint",
+  waitlisted: "bg-amber/12 text-amber",
+  rejected: "bg-brick/12 text-brick",
 };
 
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -24,7 +24,7 @@ const STATUS_LABELS: Record<ApplicationStatus, string> = {
 export function StatusBadge({ status }: { status: ApplicationStatus }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[status]}`}
+      className={`inline-flex items-center rounded-chip px-2 py-0.5 text-2xs font-medium ${STATUS_STYLES[status]}`}
     >
       {STATUS_LABELS[status]}
     </span>

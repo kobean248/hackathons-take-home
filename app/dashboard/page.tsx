@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { logout } from "@/app/auth/actions";
 import { createClient } from "@/lib/supabase/server";
 import { APPLICATION_TYPES } from "@/lib/applicationTypes";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/apply/status-badge";
 import { StatusTimeline } from "@/components/apply/status-timeline";
+import { QuestionIcon } from "@/components/icons";
 import type { ApplicationRow, ApplicationStatusHistoryRow } from "@/types";
 
 export default async function DashboardPage({
@@ -55,56 +57,46 @@ export default async function DashboardPage({
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <h1 className="font-display text-h2 font-semibold">Dashboard</h1>
         <div className="flex items-center gap-2">
-          <Link
-            href="/apply"
-            className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-          >
+          <Button variant="outline" render={<Link href="/apply" />}>
             Apply
-          </Link>
+          </Button>
           <form>
-            <button
-              formAction={logout}
-              className="rounded-full border border-black/[.08] px-4 py-1.5 text-sm font-medium transition-colors hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-            >
+            <Button variant="outline" formAction={logout}>
               Log out
-            </button>
+            </Button>
           </form>
         </div>
       </div>
 
       {error && (
-        <p className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+        <p className="rounded-chip bg-amber/12 px-3 py-2 text-sm text-amber">
           {error}
         </p>
       )}
 
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-sm text-muted-foreground">
         Signed in as {user.email}
       </p>
 
       {apps.length === 0 ? (
-        <div className="flex flex-col items-start gap-3 rounded-xl border border-black/[.08] p-6 dark:border-white/[.145]">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-6">
+          <QuestionIcon className="size-6 text-sky" />
+          <p className="text-sm text-muted-foreground">
             You haven&apos;t started an application yet.
           </p>
-          <Link
-            href="/apply"
-            className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background"
-          >
-            Start an application
-          </Link>
+          <Button render={<Link href="/apply" />}>Start an application</Button>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           {apps.map((app) => (
             <div
               key={app.id}
-              className="flex flex-col gap-3 rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]"
+              className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6"
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium">
+                <span className="font-display font-semibold">
                   {APPLICATION_TYPES[app.type].label}
                 </span>
                 <StatusBadge status={app.status} />
