@@ -7,6 +7,10 @@ import { FlagIcon } from "@/components/icons";
 import { Avatar } from "@/components/avatar";
 import { ReviewRing } from "@/components/organizer/review-ring";
 import { OrganizerEmpty } from "@/components/organizer/organizer-empty";
+import {
+  ApplicationsBulkToolbar,
+  RowCheckbox,
+} from "@/components/organizer/applications-bulk-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select-native";
@@ -16,7 +20,6 @@ import {
   mergeFraudFlagRows,
   type FraudFlagKind,
 } from "@/lib/fraud-flags";
-import { isCalibrationComplete } from "@/lib/organizer-ops";
 import { APPLICATION_STATUSES, type ApplicationStatus } from "@/types";
 import { PortalHero } from "@/components/shell/portal-hero";
 import { SceneReviewInbox } from "@/components/illustrations/berkeley-scenes";
@@ -32,8 +35,6 @@ type Row = {
   applicant: { full_name: string | null; email: string } | null;
 };
 
-// Same semantic mapping as StatusBadge — a colored left-edge accent per
-// row so status is scannable without reading the pill text.
 const STATUS_BORDER_CLASS: Record<ApplicationStatus, string> = {
   draft: "border-l-ink-soft/40",
   submitted: "border-l-sky",
@@ -42,18 +43,6 @@ const STATUS_BORDER_CLASS: Record<ApplicationStatus, string> = {
   waitlisted: "border-l-amber",
   rejected: "border-l-brick",
 };
-
-function calibrationCopy(mine: number, overall: number): string | null {
-  const delta = mine - overall;
-  if (!Number.isFinite(delta) || Math.abs(delta) < 0.15) {
-    return "Your scores track closely with the overall reviewer average.";
-  }
-  const abs = Math.abs(delta).toFixed(1);
-  if (delta < 0) {
-    return `You tend to score ~${abs} pts below average.`;
-  }
-  return `You tend to score ~${abs} pts above average.`;
-}
 
 export default async function OrganizerApplicationsPage({
   searchParams,
@@ -64,6 +53,7 @@ export default async function OrganizerApplicationsPage({
     q?: string;
     assigned_to_me?: string;
     flagged?: string;
+    tiebreaker?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -85,31 +75,31 @@ export default async function OrganizerApplicationsPage({
   const isOrganizer = profile?.role === "organizer";
   const mineOnly = params.assigned_to_me === "true" && !!user;
   const flaggedOnly = params.flagged === "true";
-
-  let needsCalibration = false;
-  if (user && isReviewer && mineOnly) {
-    const [{ count: sampleCount }, { count: attemptCount }] = await Promise.all([
-      supabase
-        .from("calibration_samples")
-        .select("id", { count: "exact", head: true }),
-      supabase
-        .from("calibration_attempts")
-        .select("id", { count: "exact", head: true })
-        .eq("reviewer_id", user.id),
-    ]);
-    needsCalibration = !isCalibrationComplete(
-      sampleCount ?? 0,
-      attemptCount ?? 0
-    );
-  }
+  const tiebreakerOnly = params.tiebreaker === "true";
 
   let assignedAppIds: string[] | null = null;
   if (mineOnly && user) {
     const { data: myAssignments } = await supabase
       .from("review_assignments")
       .select("application_id")
-      .eq("reviewer_id", user.id);
+      .eq("reviewer_id", user.id)
+      .is("recused_at", null);
     assignedAppIds = (myAssignments ?? []).map((a) => a.application_id);
+  }
+
+  let tiebreakerIds: string[] | null = null;
+  let spreadByApp = new Map<string, number>();
+  if (tiebreakerOnly || isOrganizer) {
+    const { data: disagrees } = await supabase
+      .from("application_score_disagreement")
+      .select("application_id, z_spread")
+      .returns<{ application_id: string; z_spread: number }[]>();
+    for (const row of disagrees ?? []) {
+      spreadByApp.set(row.application_id, Number(row.z_spread));
+    }
+    if (tiebreakerOnly) {
+      tiebreakerIds = [...spreadByApp.keys()];
+    }
   }
 
   let query = supabase
@@ -138,11 +128,17 @@ export default async function OrganizerApplicationsPage({
       query = query.in("id", assignedAppIds);
     }
   }
+  if (tiebreakerOnly) {
+    if (!tiebreakerIds || tiebreakerIds.length === 0) {
+      query = query.in("id", ["00000000-0000-0000-0000-000000000000"]);
+    } else {
+      query = query.in("id", tiebreakerIds);
+    }
+  }
 
   const { data, error } = await query.returns<Row[]>();
   let applications = data ?? [];
 
-  // Fraud flags — prefer SQL view; fall back to in-process computation.
   let flagMap = new Map<string, FraudFlagKind[]>();
   if (isOrganizer) {
     const { data: flagRows, error: flagError } = await supabase
@@ -153,7 +149,6 @@ export default async function OrganizerApplicationsPage({
     if (!flagError && flagRows) {
       flagMap = mergeFraudFlagRows(flagRows);
     } else {
-      // Broad fetch for cross-applicant comparison when view missing.
       const { data: allForFlags } = await supabase
         .from("applications")
         .select(
@@ -184,10 +179,11 @@ export default async function OrganizerApplicationsPage({
       ? await Promise.all([
           supabase
             .from("review_assignments")
-            .select("application_id")
-            .in("application_id", hackerIds),
+            .select("application_id, recused_at")
+            .in("application_id", hackerIds)
+            .is("recused_at", null),
           supabase
-            .from("reviews")
+            .from("normalized_reviews")
             .select("application_id")
             .in("application_id", hackerIds),
         ])
@@ -211,27 +207,35 @@ export default async function OrganizerApplicationsPage({
     );
   }
 
-  let calibrationNote: string | null = null;
-  if (user && isReviewer && mineOnly) {
-    const [{ data: myScores }, { data: allScores }] = await Promise.all([
-      supabase
-        .from("reviews")
-        .select("raw_total")
-        .eq("reviewer_id", user.id),
-      supabase.from("reviews").select("raw_total"),
+  // Capacity map for bulk-accept warnings
+  const capacityByType: Partial<
+    Record<ApplicationTypeKey, { accepted: number; target: number }>
+  > = {};
+  if (isOrganizer) {
+    const types = Object.keys(APPLICATION_TYPES) as ApplicationTypeKey[];
+    const [{ data: targets }, counts] = await Promise.all([
+      supabase.from("capacity_targets").select("type, target"),
+      Promise.all(
+        types.map(async (t) => {
+          const { count } = await supabase
+            .from("applications")
+            .select("id", { count: "exact", head: true })
+            .eq("type", t)
+            .eq("status", "accepted");
+          return [t, count ?? 0] as const;
+        })
+      ),
     ]);
-
-    const mine = (myScores ?? [])
-      .map((r) => Number(r.raw_total))
-      .filter((n) => Number.isFinite(n));
-    const all = (allScores ?? [])
-      .map((r) => Number(r.raw_total))
-      .filter((n) => Number.isFinite(n));
-
-    if (mine.length >= 2 && all.length >= 3) {
-      const avg = (xs: number[]) =>
-        xs.reduce((a, b) => a + b, 0) / xs.length;
-      calibrationNote = calibrationCopy(avg(mine), avg(all));
+    const acceptedMap = Object.fromEntries(counts) as Record<
+      ApplicationTypeKey,
+      number
+    >;
+    for (const row of targets ?? []) {
+      const t = row.type as ApplicationTypeKey;
+      capacityByType[t] = {
+        accepted: acceptedMap[t] ?? 0,
+        target: row.target,
+      };
     }
   }
 
@@ -240,23 +244,41 @@ export default async function OrganizerApplicationsPage({
     params.status ||
     params.q ||
     params.assigned_to_me ||
-    params.flagged;
+    params.flagged ||
+    params.tiebreaker;
 
   function clearHref() {
     if (mineOnly) return "/organizer/applications?assigned_to_me=true";
+    if (tiebreakerOnly) return "/organizer/applications?tiebreaker=true";
     return "/organizer/applications";
   }
+
+  const exportParams = new URLSearchParams();
+  if (params.type) exportParams.set("type", params.type);
+  if (params.status) exportParams.set("status", params.status);
+  if (params.q) exportParams.set("q", params.q);
+  if (mineOnly) exportParams.set("assigned_to_me", "true");
+  if (flaggedOnly) exportParams.set("flagged", "true");
+  if (tiebreakerOnly) exportParams.set("tiebreaker", "true");
+  const exportHref = `/organizer/applications/export?${exportParams.toString()}`;
+
+  const heroTitle = tiebreakerOnly
+    ? "Needs a tiebreaker"
+    : mineOnly
+      ? "My queue"
+      : "Applications";
+  const heroDescription = tiebreakerOnly
+    ? "Reviewers disagree sharply (z-score spread > 1.5). Grab a third read before deciding."
+    : mineOnly
+      ? "Assigned hacker applications waiting on your rubric scores."
+      : "Filter, flag, bulk-decide, and export across every track.";
 
   return (
     <div className="flex flex-col gap-6">
       <PortalHero
         eyebrow="Organizer"
-        title={mineOnly ? "My queue" : "Applications"}
-        description={
-          mineOnly
-            ? "Assigned hacker applications waiting on your rubric scores."
-            : "Filter, flag, and open applications across every track."
-        }
+        title={heroTitle}
+        description={heroDescription}
         scene={<SceneReviewInbox className="h-full w-full" />}
       >
         <div className="mt-5 flex flex-wrap items-center gap-4">
@@ -266,7 +288,7 @@ export default async function OrganizerApplicationsPage({
               shown
             </span>
           </p>
-          {isReviewer && (
+          {isReviewer && !tiebreakerOnly && (
             <Link
               href={
                 mineOnly
@@ -278,6 +300,18 @@ export default async function OrganizerApplicationsPage({
               {mineOnly ? "View all applications" : "View my queue"}
             </Link>
           )}
+          {isOrganizer && (
+            <Link
+              href={
+                tiebreakerOnly
+                  ? "/organizer/applications"
+                  : "/organizer/applications?tiebreaker=true"
+              }
+              className="text-sm font-medium text-amber underline-offset-2 hover:underline"
+            >
+              {tiebreakerOnly ? "Leave tiebreaker view" : "Needs a tiebreaker"}
+            </Link>
+          )}
         </div>
       </PortalHero>
 
@@ -287,35 +321,15 @@ export default async function OrganizerApplicationsPage({
         </p>
       )}
 
-      {needsCalibration && (
-        <p className="rounded-xl border border-amber/40 bg-amber/10 px-4 py-3 text-sm text-amber">
-          Complete calibration first —{" "}
-          <Link
-            href="/organizer/calibration"
-            className="font-medium underline underline-offset-2"
-          >
-            grade the three gold samples
-          </Link>{" "}
-          before reviewing your queue.
-        </p>
-      )}
-
-      {calibrationNote && (
-        <p className="rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
-          <span className="font-medium text-ink">Calibration note — </span>
-          {calibrationNote}{" "}
-          <span className="text-ink-soft">
-            (private; based on your raw totals vs. all reviewers.)
-          </span>
-        </p>
-      )}
-
       <form
         method="get"
         className="flex flex-wrap items-end gap-3 rounded-xl border border-line bg-surface p-4"
       >
         {mineOnly && (
           <input type="hidden" name="assigned_to_me" value="true" />
+        )}
+        {tiebreakerOnly && (
+          <input type="hidden" name="tiebreaker" value="true" />
         )}
         <label className="flex flex-col gap-1 text-2xs text-ink-soft">
           Type
@@ -368,119 +382,161 @@ export default async function OrganizerApplicationsPage({
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-xl border border-line">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-paper">
-            <tr>
-              <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
-                Applicant
-              </th>
-              <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
-                Type
-              </th>
-              <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
-                Status
-              </th>
-              <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
-                Submitted
-              </th>
-              <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
-                Reviews
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {applications.length === 0 && (
+      <ApplicationsBulkToolbar
+        rows={applications.map((a) => ({
+          id: a.id,
+          type: a.type,
+          status: a.status,
+        }))}
+        capacityByType={capacityByType}
+        exportHref={exportHref}
+        enableBulk={isOrganizer}
+      >
+        <div className="overflow-x-auto rounded-xl border border-line">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-paper">
               <tr>
-                <td colSpan={5}>
-                  <OrganizerEmpty
-                    title={
-                      flaggedOnly
-                        ? "No flagged applications"
-                        : mineOnly
-                          ? "Nothing in your queue yet"
-                          : "No applications match these filters"
-                    }
-                    body={
-                      flaggedOnly
-                        ? "Duplicate names or identical free-text answers will show up here."
-                        : mineOnly
-                          ? "Ask an organizer to assign a batch from Reviewers."
-                          : "Try clearing filters, or wait for new submissions."
-                    }
-                  />
-                </td>
+                {isOrganizer && (
+                  <th className="w-10 px-3 py-2.5" aria-label="Select" />
+                )}
+                <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
+                  Applicant
+                </th>
+                <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
+                  Type
+                </th>
+                <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
+                  Status
+                </th>
+                <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
+                  Submitted
+                </th>
+                <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
+                  Reviews
+                </th>
+                {tiebreakerOnly && (
+                  <th className="px-4 py-2.5 text-2xs font-medium text-ink-soft">
+                    Z spread
+                  </th>
+                )}
               </tr>
-            )}
-            {applications.map((app) => {
-              const flags = flagMap.get(app.id);
-              const name =
-                app.applicant?.full_name || app.applicant?.email || "?";
-              return (
-                <tr
-                  key={app.id}
-                  className={`border-t border-line border-l-4 hover:bg-paper ${STATUS_BORDER_CLASS[app.status]}`}
-                >
-                  <td className="px-4 py-2.5">
-                    <div className="flex items-center gap-2.5">
-                      {flags && flags.length > 0 && (
-                        <span
-                          title={fraudFlagTooltip(flags)}
-                          className="inline-flex shrink-0 text-amber"
-                          aria-label={fraudFlagTooltip(flags)}
-                        >
-                          <FlagIcon className="size-4" />
-                        </span>
-                      )}
-                      <Avatar id={app.applicant_id} name={name} />
-                      <div>
-                        <Link
-                          href={`/organizer/applications/${app.id}`}
-                          className="font-medium text-ink underline-offset-2 hover:underline"
-                        >
-                          {name}
-                        </Link>
-                        <div className="text-2xs text-ink-soft">
-                          {app.applicant?.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2.5 text-ink">
-                    {APPLICATION_TYPES[app.type].label}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <StatusBadge status={app.status} />
-                  </td>
-                  <td className="px-4 py-2.5 text-ink-soft">
-                    {app.submitted_at ? (
-                      <DeadlineChip
-                        date={new Date(app.submitted_at).toLocaleDateString(
-                          "en-US",
-                          { month: "numeric", day: "numeric" }
-                        )}
-                        label="Submitted"
-                      />
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    {app.type === "hacker" ? (
-                      <ReviewRing
-                        done={completedCount.get(app.id) ?? 0}
-                        total={assignedCount.get(app.id) ?? 0}
-                      />
-                    ) : (
-                      <span className="text-ink-soft">—</span>
-                    )}
+            </thead>
+            <tbody>
+              {applications.length === 0 && (
+                <tr>
+                  <td colSpan={isOrganizer ? (tiebreakerOnly ? 7 : 6) : 5}>
+                    <OrganizerEmpty
+                      title={
+                        tiebreakerOnly
+                          ? "No high-variance applications"
+                          : flaggedOnly
+                            ? "No flagged applications"
+                            : mineOnly
+                              ? "Nothing in your queue yet"
+                              : "No applications match these filters"
+                      }
+                      body={
+                        tiebreakerOnly
+                          ? "Apps appear here when two+ eligible reviews disagree by more than 1.5 z."
+                          : flaggedOnly
+                            ? "Duplicate names or identical free-text answers will show up here."
+                            : mineOnly
+                              ? "Ask an organizer to assign a batch from Reviewers."
+                              : "Try clearing filters, or wait for new submissions."
+                      }
+                    />
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              )}
+              {applications.map((app) => {
+                const flags = flagMap.get(app.id);
+                const name =
+                  app.applicant?.full_name || app.applicant?.email || "?";
+                const spread = spreadByApp.get(app.id);
+                return (
+                  <tr
+                    key={app.id}
+                    className={`border-t border-line border-l-4 hover:bg-paper ${STATUS_BORDER_CLASS[app.status]}`}
+                  >
+                    {isOrganizer && (
+                      <td className="px-3 py-2.5">
+                        <RowCheckbox id={app.id} />
+                      </td>
+                    )}
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-2.5">
+                        {flags && flags.length > 0 && (
+                          <span
+                            title={fraudFlagTooltip(flags)}
+                            className="inline-flex shrink-0 text-amber"
+                            aria-label={fraudFlagTooltip(flags)}
+                          >
+                            <FlagIcon className="size-4" />
+                          </span>
+                        )}
+                        {spread != null && !tiebreakerOnly && (
+                          <span
+                            title={`Reviewer z-spread ${spread}`}
+                            className="inline-flex shrink-0 rounded-chip bg-amber/15 px-1.5 py-0.5 text-[0.65rem] font-semibold text-amber"
+                          >
+                            tie
+                          </span>
+                        )}
+                        <Avatar id={app.applicant_id} name={name} />
+                        <div>
+                          <Link
+                            href={`/organizer/applications/${app.id}`}
+                            className="font-medium text-ink underline-offset-2 hover:underline"
+                          >
+                            {name}
+                          </Link>
+                          <div className="text-2xs text-ink-soft">
+                            {app.applicant?.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-ink">
+                      {APPLICATION_TYPES[app.type].label}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <StatusBadge status={app.status} />
+                    </td>
+                    <td className="px-4 py-2.5 text-ink-soft">
+                      {app.submitted_at ? (
+                        <DeadlineChip
+                          date={new Date(app.submitted_at).toLocaleDateString(
+                            "en-US",
+                            { month: "numeric", day: "numeric" }
+                          )}
+                          label="Submitted"
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {app.type === "hacker" ? (
+                        <ReviewRing
+                          done={completedCount.get(app.id) ?? 0}
+                          total={assignedCount.get(app.id) ?? 0}
+                        />
+                      ) : (
+                        <span className="text-ink-soft">—</span>
+                      )}
+                    </td>
+                    {tiebreakerOnly && (
+                      <td className="px-4 py-2.5 font-display font-semibold tabular-nums text-amber">
+                        {spread != null ? spread.toFixed(2) : "—"}
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </ApplicationsBulkToolbar>
     </div>
   );
 }

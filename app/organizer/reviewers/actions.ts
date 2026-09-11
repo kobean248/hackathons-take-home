@@ -4,6 +4,118 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
+async function requireOrganizer() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "organizer") {
+    redirect(
+      "/organizer/reviewers?error=" +
+        encodeURIComponent("Only organizers can manage reviewer roles.")
+    );
+  }
+
+  return { supabase, user };
+}
+
+/** Elevate an applicant to reviewer. */
+export async function promoteToReviewer(formData: FormData) {
+  const { supabase, user } = await requireOrganizer();
+  const profileId = String(formData.get("profile_id") ?? "").trim();
+  if (!profileId) {
+    redirect(
+      "/organizer/reviewers?error=" +
+        encodeURIComponent("Pick a user to promote.")
+    );
+  }
+  if (profileId === user.id) {
+    redirect(
+      "/organizer/reviewers?error=" +
+        encodeURIComponent("You can't change your own role here.")
+    );
+  }
+
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("id, role, email")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (!target) {
+    redirect(
+      "/organizer/reviewers?error=" + encodeURIComponent("User not found.")
+    );
+  }
+  if (target.role === "organizer") {
+    redirect(
+      "/organizer/reviewers?error=" +
+        encodeURIComponent("Can't change an organizer's role from this panel.")
+    );
+  }
+  if (target.role === "reviewer") {
+    redirect(`/organizer/reviewers?promoted=already`);
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role: "reviewer" })
+    .eq("id", profileId)
+    .eq("role", "applicant");
+
+  if (error) {
+    redirect(
+      "/organizer/reviewers?error=" + encodeURIComponent(error.message)
+    );
+  }
+
+  revalidatePath("/organizer/reviewers");
+  redirect(
+    `/organizer/reviewers?promoted=${encodeURIComponent(target.email)}`
+  );
+}
+
+/** Demote a reviewer back to applicant. */
+export async function demoteReviewer(formData: FormData) {
+  const { supabase, user } = await requireOrganizer();
+  const profileId = String(formData.get("profile_id") ?? "").trim();
+  if (!profileId) {
+    redirect(
+      "/organizer/reviewers?error=" +
+        encodeURIComponent("Pick a reviewer to demote.")
+    );
+  }
+  if (profileId === user.id) {
+    redirect(
+      "/organizer/reviewers?error=" +
+        encodeURIComponent("You can't change your own role here.")
+    );
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role: "applicant" })
+    .eq("id", profileId)
+    .eq("role", "reviewer");
+
+  if (error) {
+    redirect(
+      "/organizer/reviewers?error=" + encodeURIComponent(error.message)
+    );
+  }
+
+  revalidatePath("/organizer/reviewers");
+  redirect("/organizer/reviewers?demoted=1");
+}
+
 // Round-robins unassigned, submitted, hacker-type applications across
 // active (role='reviewer') reviewers. "Unassigned" means the application
 // has zero review_assignments rows yet — this assigns each qualifying app

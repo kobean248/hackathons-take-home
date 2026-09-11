@@ -1,6 +1,6 @@
 /**
  * Seeds demo data: 3 organizers, 5 reviewers, ~30 applicants split across
- * hacker/mentor/volunteer with realistic form_data, a mix of statuses, and
+ * hacker/mentor/volunteer/judge with realistic form_data, a mix of statuses, and
  * some review_assignments/reviews so /organizer/analytics has real numbers.
  *
  * Run with: pnpm seed
@@ -160,7 +160,7 @@ async function main() {
     console.log(`reviewer   ${name} <${user.email}>`);
   }
 
-  const types: ApplicationTypeKey[] = ["hacker", "mentor", "volunteer"];
+  const types: ApplicationTypeKey[] = ["hacker", "mentor", "volunteer", "judge"];
   const applications: {
     id: string;
     type: ApplicationTypeKey;

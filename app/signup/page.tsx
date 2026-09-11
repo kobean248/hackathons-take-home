@@ -68,7 +68,7 @@ export default function SignupPage() {
   }
 
   return (
-    <AuthSplitLayout tagline="Create an account to apply as a Hacker, Mentor, or Volunteer.">
+    <AuthSplitLayout tagline="Create an account to apply as a Hacker, Mentor, Volunteer, or Judge.">
       <h2 className="font-display text-h2 font-semibold text-foreground">
         Sign up
       </h2>

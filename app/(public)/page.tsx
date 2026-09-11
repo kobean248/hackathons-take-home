@@ -68,7 +68,7 @@ export default async function Home() {
           </h1>
           <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">
             Apply, track your status, and — if you&apos;re an organizer —
-            review applications. A Berkeley weekend, not a generic portal.
+            review applications.
           </p>
 
           <div className="mt-8">

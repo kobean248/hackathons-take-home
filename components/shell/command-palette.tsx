@@ -260,9 +260,9 @@ export function buildOrganizerCommands(): CommandItem[] {
       group: "Review",
     },
     {
-      id: "cal",
-      label: "Calibration",
-      href: "/organizer/calibration",
+      id: "tiebreaker",
+      label: "Needs a tiebreaker",
+      href: "/organizer/applications?tiebreaker=true",
       group: "Review",
     },
     {
@@ -275,6 +275,12 @@ export function buildOrganizerCommands(): CommandItem[] {
       id: "an",
       label: "Analytics",
       href: "/organizer/analytics",
+      group: "Manage",
+    },
+    {
+      id: "audit",
+      label: "Audit log",
+      href: "/organizer/audit",
       group: "Manage",
     },
     {

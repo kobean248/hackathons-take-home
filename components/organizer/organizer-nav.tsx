@@ -5,7 +5,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import {
   AnalyticsIcon,
   ApplicationsIcon,
-  CalibrationIcon,
+  AuditIcon,
+  FlagIcon,
   QueueIcon,
   ReviewersIcon,
 } from "@/components/icons";
@@ -20,7 +21,7 @@ import {
 type NavItem = {
   href: string;
   label: string;
-  match: "all" | "queue" | "path";
+  match: "all" | "queue" | "tiebreaker" | "path";
   icon: typeof ApplicationsIcon;
   badgeKey?: "total" | "queue";
 };
@@ -44,10 +45,10 @@ const SECTIONS: { label: string; items: NavItem[] }[] = [
         badgeKey: "queue",
       },
       {
-        href: "/organizer/calibration",
-        label: "Calibration",
-        match: "path",
-        icon: CalibrationIcon,
+        href: "/organizer/applications?tiebreaker=true",
+        label: "Needs a tiebreaker",
+        match: "tiebreaker",
+        icon: FlagIcon,
       },
     ],
   },
@@ -65,6 +66,12 @@ const SECTIONS: { label: string; items: NavItem[] }[] = [
         label: "Analytics",
         match: "path",
         icon: AnalyticsIcon,
+      },
+      {
+        href: "/organizer/audit",
+        label: "Audit log",
+        match: "path",
+        icon: AuditIcon,
       },
     ],
   },
@@ -84,6 +91,8 @@ export function OrganizerNav({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const mine = searchParams.get("assigned_to_me") === "true";
+  const tiebreaker = searchParams.get("tiebreaker") === "true";
+  const onApplications = pathname.startsWith("/organizer/applications");
 
   const badgeValue = (key?: "total" | "queue") =>
     key === "total" ? totalCount : key === "queue" ? queueCount : undefined;
@@ -112,11 +121,11 @@ export function OrganizerNav({
               {section.items.map((item) => {
                 let active = false;
                 if (item.match === "queue") {
-                  active =
-                    pathname.startsWith("/organizer/applications") && mine;
+                  active = onApplications && mine && !tiebreaker;
+                } else if (item.match === "tiebreaker") {
+                  active = onApplications && tiebreaker;
                 } else if (item.match === "all") {
-                  active =
-                    pathname.startsWith("/organizer/applications") && !mine;
+                  active = onApplications && !mine && !tiebreaker;
                 } else {
                   active = pathname.startsWith(item.href.split("?")[0]!);
                 }

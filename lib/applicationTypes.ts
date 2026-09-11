@@ -83,7 +83,36 @@ export const APPLICATION_TYPES = {
       },
     ],
   },
-  // judge: { ... } — left as an exercise, same pattern
+  judge: {
+    label: "Judge",
+    needsRubricGrading: false,
+    fields: [
+      {
+        name: "company",
+        label: "Company / Affiliation",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "expertise",
+        label: "Areas of expertise",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "judging_experience",
+        label: "Have you judged hackathons or similar events before?",
+        type: "textarea",
+        required: true,
+      },
+      {
+        name: "why_judge",
+        label: "Why do you want to judge Cal Hacks?",
+        type: "textarea",
+        required: true,
+      },
+    ],
+  },
 } as const satisfies Record<string, ApplicationTypeConfig>;
 
 export type ApplicationTypeKey = keyof typeof APPLICATION_TYPES;

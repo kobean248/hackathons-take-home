@@ -49,6 +49,14 @@ const COURSE_META: Record<
     prereq: "None",
     blurb: "Keep the event flying. Short form, accept/reject.",
   },
+  judge: {
+    code: "JUDG 200",
+    units: "1 unit",
+    meeting: "Sun · Expo floor",
+    instructor: "Sponsors / alumni",
+    prereq: "Domain depth",
+    blurb: "Score demos at expo. Short form, organizer decision.",
+  },
 };
 
 export default async function ApplyPage() {
@@ -87,7 +95,7 @@ export default async function ApplyPage() {
       </PortalHero>
 
       <div className="flex flex-col gap-3">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {TYPES.map((type) => {
           const config = APPLICATION_TYPES[type];
           const course = COURSE_META[type];

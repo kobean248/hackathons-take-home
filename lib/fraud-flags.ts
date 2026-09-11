@@ -50,6 +50,8 @@ export function computeFraudFlags(apps: {
   const TEXT_FIELDS = [
     "why_cal_hacks",
     "why_volunteer",
+    "why_judge",
+    "judging_experience",
     "project_idea",
     "availability",
     "expertise",

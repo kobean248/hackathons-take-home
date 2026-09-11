@@ -1,44 +1,5 @@
 import type { ApplicationTypeKey } from "@/lib/applicationTypes";
 
-export type RubricScores = {
-  technical: number;
-  creativity: number;
-  impact: number;
-};
-
-export const RUBRIC_KEYS: (keyof RubricScores)[] = [
-  "technical",
-  "creativity",
-  "impact",
-];
-
-/** Compare a reviewer score to gold; returns short calibration feedback. */
-export function scoreComparisonCopy(
-  dimension: keyof RubricScores,
-  yours: number,
-  gold: number
-): string {
-  const delta = yours - gold;
-  const label = dimension.charAt(0).toUpperCase() + dimension.slice(1);
-  if (delta === 0) {
-    return `You scored ${label.toLowerCase()} ${yours} — matches gold.`;
-  }
-  const abs = Math.abs(delta);
-  const severity =
-    abs <= 1 ? "slightly" : abs <= 2 ? "moderately" : "notably";
-  if (delta < 0) {
-    return `You scored ${label.toLowerCase()} ${yours} vs gold ${gold} — ${severity} harsh.`;
-  }
-  return `You scored ${label.toLowerCase()} ${yours} vs gold ${gold} — ${severity} lenient.`;
-}
-
-export function isCalibrationComplete(
-  sampleCount: number,
-  attemptCount: number
-): boolean {
-  return sampleCount > 0 && attemptCount >= sampleCount;
-}
-
 export type CapacityTargetRow = {
   type: ApplicationTypeKey;
   target: number;
@@ -60,3 +21,26 @@ export function wouldExceedCapacity(
   if (currentlyAccepted) return false;
   return accepted + 1 > target;
 }
+
+/** Bulk accept: how many of the selected would newly count against capacity. */
+export function wouldBulkAcceptExceedCapacity(
+  currentlyAccepted: number,
+  target: number,
+  newlyAcceptingCount: number
+): boolean {
+  if (newlyAcceptingCount <= 0) return false;
+  return currentlyAccepted + newlyAcceptingCount > target;
+}
+
+export function bulkCapacityWarning(
+  typeLabel: string,
+  currentlyAccepted: number,
+  target: number,
+  newlyAcceptingCount: number
+): string {
+  const next = currentlyAccepted + newlyAcceptingCount;
+  return `This would put you at ${next}/${target} ${typeLabel.toLowerCase()} slots.`;
+}
+
+/** Z-score max−min threshold for the "needs a tiebreaker" view. */
+export const TIEBREAKER_Z_SPREAD = 1.5;

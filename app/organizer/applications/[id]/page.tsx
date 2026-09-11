@@ -2,15 +2,19 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTypes";
 import { StatusBadge } from "@/components/apply/status-badge";
-import { StatusTimeline } from "@/components/apply/status-timeline";
 import { DecisionButtons } from "@/components/organizer/decision-buttons";
 import { GradingPanel } from "@/components/organizer/grading-panel";
 import { ReviewsList } from "@/components/organizer/reviews-list";
+import { RecusalButton } from "@/components/organizer/recusal-button";
+import {
+  ActivityLog,
+  type ActivityEvent,
+} from "@/components/organizer/activity-log";
 import { Avatar } from "@/components/avatar";
 import { FlagIcon } from "@/components/icons";
 import { fraudFlagTooltip, type FraudFlagKind } from "@/lib/fraud-flags";
 import { daysSince } from "@/lib/deadlines";
-import type { ApplicationStatus, ApplicationStatusHistoryRow } from "@/types";
+import type { ApplicationStatus } from "@/types";
 
 type ApplicationDetail = {
   id: string;
@@ -123,17 +127,6 @@ export default async function ApplicationDetailPage({
     resumeUrl = signed?.signedUrl ?? null;
   }
 
-  const { data: history } = await supabase
-    .from("application_status_history")
-    .select("id, application_id, status, changed_at, note")
-    .eq("application_id", id)
-    .order("changed_at", { ascending: true })
-    .returns<ApplicationStatusHistoryRow[]>();
-
-  const canGrade =
-    application.type === "hacker" &&
-    (viewerProfile?.role === "organizer" || viewerProfile?.role === "reviewer");
-
   let capacity: {
     accepted: number;
     target: number;
@@ -164,28 +157,183 @@ export default async function ApplicationDetailPage({
 
   let myReview: { scores: Scores; comments: string | null } | null = null;
   let allReviews: ReviewRow[] = [];
+  let alreadyRecused = false;
+  let activityEvents: ActivityEvent[] = [];
+
+  // Recusal state for this viewer
+  const { data: myAssignment } = await supabase
+    .from("review_assignments")
+    .select("recused_at, recusal_note")
+    .eq("application_id", id)
+    .eq("reviewer_id", user.id)
+    .maybeSingle();
+  alreadyRecused = Boolean(myAssignment?.recused_at);
 
   if (application.type === "hacker") {
-    const [{ data: mine }, { data: reviews }] = await Promise.all([
+    const [{ data: mine }, { data: reviews }, { data: recusedAssigns }] =
+      await Promise.all([
+        supabase
+          .from("reviews")
+          .select("scores, comments")
+          .eq("application_id", id)
+          .eq("reviewer_id", user.id)
+          .returns<{ scores: Scores; comments: string | null }[]>()
+          .maybeSingle(),
+        supabase
+          .from("reviews")
+          .select(
+            "id, reviewer_id, scores, raw_total, comments, reviewer:profiles!reviews_reviewer_id_fkey(full_name, email)"
+          )
+          .eq("application_id", id)
+          .order("submitted_at", { ascending: true })
+          .returns<ReviewRow[]>(),
+        supabase
+          .from("review_assignments")
+          .select("reviewer_id")
+          .eq("application_id", id)
+          .not("recused_at", "is", null),
+      ]);
+    myReview = alreadyRecused ? null : (mine ?? null);
+    const recusedIds = new Set(
+      (recusedAssigns ?? []).map((a) => a.reviewer_id)
+    );
+    // Match normalized_reviews: omit recused reviewers from the list.
+    allReviews = (reviews ?? []).filter((r) => !recusedIds.has(r.reviewer_id));
+  }
+
+  // Activity / audit log — prefer unified view; fall back to composing rows.
+  const { data: activityRows, error: activityError } = await supabase
+    .from("application_activity")
+    .select("event_id, kind, occurred_at, actor_id, detail, note")
+    .eq("application_id", id)
+    .order("occurred_at", { ascending: false })
+    .returns<
+      {
+        event_id: string;
+        kind: string;
+        occurred_at: string;
+        actor_id: string | null;
+        detail: string | null;
+        note: string | null;
+      }[]
+    >();
+
+  if (!activityError && activityRows) {
+    const actorIds = [
+      ...new Set(
+        activityRows.map((r) => r.actor_id).filter((x): x is string => !!x)
+      ),
+    ];
+    const { data: actors } =
+      actorIds.length > 0
+        ? await supabase
+            .from("profiles")
+            .select("id, full_name, email")
+            .in("id", actorIds)
+        : { data: [] as { id: string; full_name: string | null; email: string }[] };
+    const nameById = new Map(
+      (actors ?? []).map((a) => [
+        a.id,
+        a.full_name || a.email || "Unknown",
+      ])
+    );
+    activityEvents = activityRows
+      .filter(
+        (r): r is typeof r & { kind: ActivityEvent["kind"] } =>
+          r.kind === "status_change" ||
+          r.kind === "review" ||
+          r.kind === "recusal"
+      )
+      .map((r) => ({
+        event_id: r.event_id,
+        kind: r.kind,
+        occurred_at: r.occurred_at,
+        actor_name: r.actor_id
+          ? (nameById.get(r.actor_id) ?? "Unknown")
+          : "System",
+        detail: r.detail,
+        note: r.note,
+      }));
+  } else {
+    // Fallback without the view: status history + reviews + recusals
+    const [historyWithActors, reviewsForLog, recusals] = await Promise.all([
       supabase
-        .from("reviews")
-        .select("scores, comments")
+        .from("application_status_history")
+        .select(
+          "id, status, changed_at, note, changed_by, actor:profiles!application_status_history_changed_by_fkey(full_name, email)"
+        )
         .eq("application_id", id)
-        .eq("reviewer_id", user.id)
-        .returns<{ scores: Scores; comments: string | null }[]>()
-        .maybeSingle(),
+        .order("changed_at", { ascending: false }),
       supabase
         .from("reviews")
         .select(
-          "id, reviewer_id, scores, raw_total, comments, reviewer:profiles!reviews_reviewer_id_fkey(full_name, email)"
+          "id, submitted_at, raw_total, comments, reviewer_id, reviewer:profiles!reviews_reviewer_id_fkey(full_name, email)"
+        )
+        .eq("application_id", id),
+      supabase
+        .from("review_assignments")
+        .select(
+          "id, recused_at, recusal_note, reviewer_id, reviewer:profiles!review_assignments_reviewer_id_fkey(full_name, email)"
         )
         .eq("application_id", id)
-        .order("submitted_at", { ascending: true })
-        .returns<ReviewRow[]>(),
+        .not("recused_at", "is", null),
     ]);
-    myReview = mine ?? null;
-    allReviews = reviews ?? [];
+
+    for (const h of historyWithActors.data ?? []) {
+      const actor = Array.isArray(h.actor) ? h.actor[0] : h.actor;
+      activityEvents.push({
+        event_id: h.id,
+        kind: "status_change",
+        occurred_at: h.changed_at,
+        actor_name:
+          (actor as { full_name: string | null; email: string } | null)
+            ?.full_name ||
+          (actor as { email: string } | null)?.email ||
+          "Unknown",
+        detail: h.status,
+        note: h.note,
+      });
+    }
+    for (const r of reviewsForLog.data ?? []) {
+      const actor = Array.isArray(r.reviewer) ? r.reviewer[0] : r.reviewer;
+      activityEvents.push({
+        event_id: r.id,
+        kind: "review",
+        occurred_at: r.submitted_at,
+        actor_name:
+          (actor as { full_name: string | null; email: string } | null)
+            ?.full_name ||
+          (actor as { email: string } | null)?.email ||
+          "Unknown",
+        detail: `raw_total=${r.raw_total}`,
+        note: r.comments,
+      });
+    }
+    for (const ra of recusals.data ?? []) {
+      const actor = Array.isArray(ra.reviewer) ? ra.reviewer[0] : ra.reviewer;
+      activityEvents.push({
+        event_id: ra.id,
+        kind: "recusal",
+        occurred_at: ra.recused_at!,
+        actor_name:
+          (actor as { full_name: string | null; email: string } | null)
+            ?.full_name ||
+          (actor as { email: string } | null)?.email ||
+          "Unknown",
+        detail: "conflict_of_interest",
+        note: ra.recusal_note,
+      });
+    }
+    activityEvents.sort(
+      (a, b) =>
+        new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
+    );
   }
+
+  const canGrade =
+    application.type === "hacker" &&
+    (viewerProfile?.role === "organizer" || viewerProfile?.role === "reviewer") &&
+    !alreadyRecused;
 
   return (
     <div className="flex flex-col gap-6">
@@ -292,6 +440,14 @@ export default async function ApplicationDetailPage({
         capacity={capacity}
       />
 
+      {(viewerProfile?.role === "organizer" ||
+        viewerProfile?.role === "reviewer") && (
+        <RecusalButton
+          applicationId={application.id}
+          alreadyRecused={alreadyRecused}
+        />
+      )}
+
       <div className="rounded-xl border border-border bg-card p-6">
         <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
           Responses
@@ -344,9 +500,9 @@ export default async function ApplicationDetailPage({
 
       <div className="rounded-xl border border-border bg-card p-6">
         <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
-          History
+          Activity / audit log
         </h2>
-        <StatusTimeline history={history ?? []} />
+        <ActivityLog events={activityEvents} />
       </div>
     </div>
   );
