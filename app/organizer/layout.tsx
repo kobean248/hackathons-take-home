@@ -1,5 +1,12 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+
+const NAV = [
+  { href: "/organizer/applications", label: "Applications" },
+  { href: "/organizer/reviewers", label: "Reviewers" },
+  { href: "/organizer/analytics", label: "Analytics" },
+];
 
 // Shared by every /organizer/* page (applications list, detail, reviewers,
 // analytics). proxy.ts already redirects unauthenticated/wrong-role
@@ -32,5 +39,20 @@ export default async function OrganizerLayout({
     );
   }
 
-  return <div className="mx-auto min-h-screen max-w-5xl p-6">{children}</div>;
+  return (
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 p-6">
+      <nav className="flex gap-4 border-b border-black/[.08] pb-3 text-sm dark:border-white/[.145]">
+        {NAV.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+      {children}
+    </div>
+  );
 }
