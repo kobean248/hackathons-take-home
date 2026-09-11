@@ -36,7 +36,22 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    let next = "/dashboard";
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (profile?.role === "organizer" || profile?.role === "reviewer") {
+        next = "/organizer/applications";
+      }
+    }
+
+    router.push(next);
     router.refresh();
   }
 

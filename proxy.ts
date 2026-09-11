@@ -5,18 +5,22 @@ import { type NextRequest, NextResponse } from "next/server";
 // (same behavior, new name/export). See node_modules/next/dist/docs/01-app/
 // 03-api-reference/03-file-conventions/proxy.md for details.
 //
-// Gates exactly /dashboard and /organizer/* per the route-protection spec:
+// Gates authenticated portal routes:
 // - no session -> /login
 // - session but role isn't organizer/reviewer, hitting /organizer/* -> /dashboard
-// Every other route (including /apply, once it exists) is left open here;
-// pages that need auth should still re-check server-side themselves, same
-// as app/dashboard/page.tsx already does — proxy is a fast first gate, not
-// the only one.
+// Public marketing routes (including `/`) stay open for everyone — signed-in
+// users get a "Go to dashboard" banner instead of a force redirect.
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const needsAuth =
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
+    pathname === "/apply" ||
+    pathname.startsWith("/apply/") ||
+    pathname === "/teams" ||
+    pathname.startsWith("/teams/") ||
+    pathname === "/settings" ||
+    pathname.startsWith("/settings/") ||
     pathname === "/organizer" ||
     pathname.startsWith("/organizer/");
 
@@ -87,5 +91,16 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*", "/organizer", "/organizer/:path*"],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/apply",
+    "/apply/:path*",
+    "/teams",
+    "/teams/:path*",
+    "/settings",
+    "/settings/:path*",
+    "/organizer",
+    "/organizer/:path*",
+  ],
 };

@@ -1,0 +1,67 @@
+import Link from "next/link";
+
+const STEPS = [
+  {
+    title: "Join Discord",
+    body: "Invite link lands in your acceptance email. Channels for teams, travel, and hardware open ~1 week before kickoff.",
+    cta: { href: "#", label: "Discord (placeholder)" },
+  },
+  {
+    title: "Travel & lodging",
+    body: "If you requested a stipend, watch for a follow-up form. Bay Area folks: Muni/BART to campus; limited overnight rooms TBA.",
+  },
+  {
+    title: "What to bring",
+    body: "Laptop + charger, student ID, reusable bottle, hoodie. Hardware track: bring boards if you have them.",
+  },
+  {
+    title: "Check-in",
+    body: "Friday 5:00p at Memorial Glade tents. Bring photo ID. Wristband gets you meals and venue access.",
+  },
+];
+
+export function AcceptanceNextSteps({
+  typeLabel,
+}: {
+  typeLabel: string;
+}) {
+  return (
+    <div className="rounded-xl border border-mint/35 bg-mint/8 p-4 sm:p-5">
+      <p className="font-display text-sm font-semibold text-ink">
+        You&apos;re in as a {typeLabel}
+      </p>
+      <p className="mt-1 text-2xs text-ink-soft">
+        Next steps before the weekend — details also go to your email.
+      </p>
+      <ol className="mt-4 space-y-4">
+        {STEPS.map((step, i) => (
+          <li key={step.title} className="flex gap-3">
+            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-mint/20 font-display text-2xs font-semibold tabular-nums text-mint">
+              {i + 1}
+            </span>
+            <div>
+              <p className="text-sm font-medium text-ink">{step.title}</p>
+              <p className="mt-0.5 text-2xs leading-relaxed text-ink-soft">
+                {step.body}
+              </p>
+              {step.cta && (
+                <Link
+                  href={step.cta.href}
+                  className="mt-1 inline-block text-2xs font-medium text-sunset"
+                >
+                  {step.cta.label} →
+                </Link>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <Link
+        href="/dashboard/next-steps"
+        className="mt-4 inline-block text-2xs font-medium text-sky"
+      >
+        Full next-steps page →
+      </Link>
+    </div>
+  );
+}
