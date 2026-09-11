@@ -80,7 +80,7 @@ export default async function ShiftsPage() {
     <div className="flex flex-col gap-6">
       <PortalHero
         title="Shifts"
-        description={`Pick your weekend blocks as ${roleLabels}. Claim what you can cover — leave anytime before the event.`}
+        description={`Pick your weekend blocks as ${roleLabels}. Claim what you can cover.`}
         scene={<SceneReviewInbox className="h-full w-full" />}
       />
 

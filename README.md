@@ -5,10 +5,6 @@ in, apply to one or more roles (Hacker / Mentor / Volunteer), and track
 status; organizers see every application in one place, filter it, grade
 hacker applications on a rubric, and accept/waitlist/reject.
 
-Built as a take-home exercise. `dev_plan.md` in this repo has the full
-architecture doc and the ordered prompt list this was built from — this
-README is the "what you'd hand a new teammate" version.
-
 ## Tech stack
 
 | Layer | Choice |
@@ -17,10 +13,6 @@ README is the "what you'd hand a new teammate" version.
 | Backend/DB | Supabase (Postgres + Auth + RLS + Storage) |
 | Forms | react-hook-form + zod |
 | Auth | Supabase Auth — email/password and Google OAuth |
-
-Note on Next.js 16: `middleware.ts` was renamed to `proxy.ts` in this
-version (same behavior). If you're used to older Next.js docs, that's why
-route protection lives in `proxy.ts`, not `middleware.ts`.
 
 ## Setup
 
@@ -266,24 +258,3 @@ organizer-sees-all, reviewer-sees-assigned), so a bug in a page's own
 auth check isn't the only thing standing between a user and someone else's
 data — the database enforces it independent of which code path reaches it
 (a Server Component, a Server Action, a future API route, `psql`).
-
-## Known gaps
-
-- Migrations haven't been applied to a real Supabase project in this
-  environment (no Docker/CLI login available while building this) — run
-  them yourself per Setup step 4 before expecting anything to work.
-  That includes `0002_resumes_bucket.sql` (resume uploads),
-  `0005_portal_stats.sql` (landing stats strip), and
-  `0006_teams.sql` (team formation + profile self-update for `/settings`).
-- To open the organizer console, promote your profile in SQL:
-  `update profiles set role = 'organizer' where email = 'you@…';`
-  Organizers/reviewers then get a **Console** chip in the applicant nav
-  and are redirected to `/organizer/applications` after sign-in.
-- The signup email template (step 5) and the Google OAuth provider
-  (step 6) both need to be turned on manually in the Supabase dashboard —
-  nothing in code can do either part.
-- At real scale (the plan's own "50,000 applications" thought experiment),
-  the first things to revisit would be `assignNextBatch`'s in-memory
-  "already assigned" set (`app/organizer/reviewers/actions.ts`) — that
-  wants to become a SQL anti-join instead of fetching every assignment row
-  into Node.
