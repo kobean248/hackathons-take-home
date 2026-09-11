@@ -20,6 +20,11 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
 
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  // File objects can't live in react-hook-form's (zod-validated) state or in
+  // the form_data jsonb column, so selected files are tracked separately,
+  // keyed by field name, and uploaded to Storage in persist().
+  const [files, setFiles] = useState<Record<string, File | null>>({});
 
   const {
     register,
@@ -41,6 +46,28 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
       return;
     }
 
+    // The only file field today is "resume", which has a dedicated
+    // applications.resume_path column (not part of form_data). A future
+    // file field would need its own `<name>_path` column the same way.
+    let resumePath: string | undefined;
+    const resumeFile = files["resume"];
+    if (resumeFile) {
+      setUploading(true);
+      const path = `${user.id}/resume.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from("resumes")
+        .upload(path, resumeFile, {
+          upsert: true,
+          contentType: "application/pdf",
+        });
+      setUploading(false);
+      if (uploadError) {
+        setFormError(uploadError.message);
+        return;
+      }
+      resumePath = path;
+    }
+
     const { data: application, error } = await supabase
       .from("applications")
       .upsert(
@@ -49,6 +76,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
           type,
           form_data: values,
           status,
+          ...(resumePath ? { resume_path: resumePath } : {}),
           ...(status === "submitted"
             ? { submitted_at: new Date().toISOString() }
             : {}),
@@ -113,12 +141,20 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
             <>
               <input
                 type="file"
-                disabled
-                className="rounded border border-black/[.08] px-3 py-2 text-zinc-400 dark:border-white/[.145]"
+                accept="application/pdf"
+                className="rounded border border-black/[.08] px-3 py-2 dark:border-white/[.145] dark:bg-transparent"
+                onChange={(e) =>
+                  setFiles((prev) => ({
+                    ...prev,
+                    [field.name]: e.target.files?.[0] ?? null,
+                  }))
+                }
               />
-              <span className="text-xs text-zinc-500">
-                Upload wired up in a later step.
-              </span>
+              {files[field.name] && (
+                <span className="text-xs text-zinc-500">
+                  Selected: {files[field.name]!.name}
+                </span>
+              )}
             </>
           ) : (
             <input
@@ -142,13 +178,13 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
         <Button
           type="button"
           variant="outline"
-          disabled={isSubmitting}
+          disabled={isSubmitting || uploading}
           onClick={onSaveDraft}
         >
-          Save draft
+          {uploading ? "Uploading…" : "Save draft"}
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting…" : "Submit"}
+        <Button type="submit" disabled={isSubmitting || uploading}>
+          {uploading ? "Uploading…" : isSubmitting ? "Submitting…" : "Submit"}
         </Button>
       </div>
     </form>
