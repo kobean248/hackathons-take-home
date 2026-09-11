@@ -11,7 +11,10 @@ export type CountdownParts = {
   done: boolean;
 };
 
-export function getCountdownParts(now = new Date(), target = EVENT_START): CountdownParts {
+export function getCountdownParts(
+  now = new Date(),
+  target = EVENT_START
+): CountdownParts {
   const diff = Math.max(0, target.getTime() - now.getTime());
   const done = diff === 0;
   const totalSec = Math.floor(diff / 1000);
@@ -24,6 +27,23 @@ export function getCountdownParts(now = new Date(), target = EVENT_START): Count
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
+}
+
+/** Tick only after mount so SSR HTML matches the first client paint. */
+function useLiveCountdown() {
+  const [parts, setParts] = useState<CountdownParts | null>(null);
+
+  useEffect(() => {
+    // Deliberately ticks once on mount (state starts null so SSR markup
+    // matches the first client paint, per the comment above) and then
+    // every second after — not a candidate for lazy useState init.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setParts(getCountdownParts());
+    const id = window.setInterval(() => setParts(getCountdownParts()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return parts;
 }
 
 /** Single digit with a short fade/flip on change. */
@@ -41,10 +61,11 @@ function Digit({
 
   useEffect(() => {
     if (value === display) return;
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
+      // Skip the flip animation outright under reduced-motion — still a
+      // deliberate sync setState, not an init-on-mount case.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplay(value);
       return;
     }
@@ -54,7 +75,6 @@ function Digit({
       setPulse(false);
     }, 120);
     return () => window.clearTimeout(t);
-    // Only react to incoming value ticks — not display echo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
@@ -100,9 +120,7 @@ function Unit({
             key={`${label}-${i}`}
             value={ch}
             tone={
-              (startTone === "navy" ? i % 2 === 0 : i % 2 === 1)
-                ? "navy"
-                : "sky"
+              (startTone === "navy" ? i % 2 === 0 : i % 2 === 1) ? "navy" : "sky"
             }
             size={size}
           />
@@ -113,6 +131,53 @@ function Unit({
           {label}
         </span>
       )}
+    </div>
+  );
+}
+
+function CountdownSkeleton({
+  size,
+  className,
+  light,
+}: {
+  size: "hero" | "inline";
+  className: string;
+  light: boolean;
+}) {
+  const wrapper = light
+    ? "[&_.text-navy-950]:text-paper [&_.text-ink-soft]:text-white/55"
+    : "";
+  return (
+    <div
+      className={`flex items-end gap-3 sm:gap-5 ${wrapper} ${className}`}
+      role="timer"
+      aria-hidden
+    >
+      <Unit value={0} label="days" size={size} />
+      <span
+        className={`pb-5 font-display text-h3 font-semibold ${
+          light ? "text-white/40" : "text-line"
+        }`}
+      >
+        :
+      </span>
+      <Unit value={0} label="hours" size={size} startTone="sky" />
+      <span
+        className={`pb-5 font-display text-h3 font-semibold ${
+          light ? "text-white/40" : "text-line"
+        }`}
+      >
+        :
+      </span>
+      <Unit value={0} label="min" size={size} />
+      <span
+        className={`pb-5 font-display text-h3 font-semibold ${
+          light ? "text-white/40" : "text-line"
+        }`}
+      >
+        :
+      </span>
+      <Unit value={0} label="sec" size={size} startTone="sky" />
     </div>
   );
 }
@@ -128,31 +193,24 @@ export function Countdown({
 }: {
   size?: "hero" | "inline";
   className?: string;
-  /** Use cream/sky tones for dark backgrounds (landing). */
   light?: boolean;
 }) {
-  const [parts, setParts] = useState<CountdownParts>(() =>
-    getCountdownParts()
-  );
+  const parts = useLiveCountdown();
 
-  useEffect(() => {
-    const id = window.setInterval(() => setParts(getCountdownParts()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  if (!parts) {
+    return (
+      <CountdownSkeleton size={size} className={className} light={light} />
+    );
+  }
 
   if (parts.done) {
     return (
-      <p
-        className={`font-display text-h3 font-semibold ${
-          light ? "text-sunset" : "text-sunset"
-        } ${className}`}
-      >
+      <p className={`font-display text-h3 font-semibold text-sunset ${className}`}>
         We&apos;re live
       </p>
     );
   }
 
-  // Light mode on navy: swap navy digits for paper
   const wrapper = light
     ? "[&_.text-navy-950]:text-paper [&_.text-ink-soft]:text-white/55"
     : "";
@@ -195,14 +253,19 @@ export function Countdown({
 
 /** Compact persistent chip for the top nav. */
 export function CountdownNavChip({ className = "" }: { className?: string }) {
-  const [parts, setParts] = useState<CountdownParts>(() =>
-    getCountdownParts()
-  );
+  const parts = useLiveCountdown();
 
-  useEffect(() => {
-    const id = window.setInterval(() => setParts(getCountdownParts()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  if (!parts) {
+    return (
+      <span
+        className={`inline-flex items-center gap-1 rounded-full border border-navy-600 bg-navy-800 px-2.5 py-1 font-display text-2xs font-semibold tabular-nums text-paper/40 ${className}`}
+        role="timer"
+        aria-hidden
+      >
+        —d · ——:——:——
+      </span>
+    );
+  }
 
   if (parts.done) {
     return (

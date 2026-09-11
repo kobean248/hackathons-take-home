@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Countdown } from "@/components/countdown/countdown";
-import {
-  BearFlying,
-  CloudShape,
-  GlobeCurve,
-  StarField,
-} from "@/components/illustrations";
+import { HeroParallax } from "@/components/shell/hero-parallax";
 import { createClient } from "@/lib/supabase/server";
 import { homePathForRole } from "@/lib/home-path";
 import type { AppRole } from "@/types";
@@ -57,89 +52,64 @@ export default async function Home() {
     ? role === "organizer" || role === "reviewer"
       ? "Open console"
       : "Open portal"
-    : "Sign in";
+    : "Enter Sather Gate";
 
   return (
-    <main className="relative flex min-h-[calc(100vh-3.5rem)] flex-1 flex-col overflow-hidden">
-      <StarField
-        density="dense"
-        className="pointer-events-none absolute inset-0 h-full w-full opacity-70"
-      />
-
-      <CloudShape
-        variant={2}
-        cream="var(--color-navy-800)"
-        primary="var(--color-sky)"
-        className="pointer-events-none absolute -left-8 top-16 w-40 opacity-60 sm:w-56"
-      />
-      <CloudShape
-        variant={5}
-        cream="var(--color-navy-800)"
-        primary="var(--color-sky)"
-        className="pointer-events-none absolute -right-10 top-28 w-48 opacity-50 sm:w-64"
-      />
-
+    <HeroParallax>
       <div className="relative z-10 mx-auto flex w-full max-w-[1120px] flex-1 flex-col justify-center px-6 py-16 lg:py-20">
-        <div className="relative min-h-[320px] sm:min-h-[420px]">
-          <GlobeCurve className="pointer-events-none absolute -bottom-8 left-1/2 w-[140%] max-w-none -translate-x-1/2 opacity-90 sm:w-full sm:max-w-4xl" />
+        <div className="relative max-w-xl pb-[min(38vh,280px)] pt-6 sm:pt-10">
+          <p className="mb-4 text-2xs font-medium tracking-wide text-cal-gold">
+            Hackathons @ Berkeley · Portal 13.0
+          </p>
+          <h1 className="font-hero text-[2.75rem] font-extrabold leading-[0.95] tracking-tight text-white sm:text-[3.5rem]">
+            Build under
+            <span className="mt-1 block text-cal-gold">the Campanile</span>
+          </h1>
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">
+            Apply, track your status, and — if you&apos;re an organizer —
+            review applications. A Berkeley weekend, not a generic portal.
+          </p>
 
-          <BearFlying className="absolute right-[4%] top-0 w-28 sm:right-[12%] sm:top-4 sm:w-40 lg:w-48" />
-
-          <div className="relative z-10 max-w-xl pt-8 sm:pt-16">
-            <p className="mb-3 text-2xs font-medium tracking-wide text-sky">
-              Hackathons @ Berkeley
+          <div className="mt-8">
+            <p className="mb-3 text-2xs font-medium text-white/45">
+              Countdown to Kickoff at the Campanile
             </p>
-            <h1 className="font-display text-[2.75rem] font-semibold leading-[0.95] tracking-tight sm:text-display">
-              Portal
-              <span className="mt-1 block text-sunset">13.0</span>
-            </h1>
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/70">
-              Apply, track your status, and — if you&apos;re an organizer —
-              review applications. Same world as the main site, built for the
-              work.
-            </p>
-
-            <div className="mt-8">
-              <p className="mb-3 text-2xs font-medium text-white/45">
-                Until kickoff
-              </p>
-              <Countdown size="hero" light />
-            </div>
-
-            {stats && (stats.applications > 0 || stats.schools > 0) && (
-              <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-6 sm:max-w-md">
-                <div>
-                  <dt className="text-2xs text-white/45">Applications</dt>
-                  <dd className="font-display text-h2 font-semibold tabular-nums text-paper">
-                    {stats.applications.toLocaleString()}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-2xs text-white/45">Schools</dt>
-                  <dd className="font-display text-h2 font-semibold tabular-nums text-sky">
-                    {stats.schools.toLocaleString()}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-2xs text-white/45">Accepted</dt>
-                  <dd className="font-display text-h2 font-semibold tabular-nums text-sunset">
-                    {stats.accepted.toLocaleString()}
-                  </dd>
-                </div>
-              </dl>
-            )}
-
-            <Button
-              render={<Link href={ctaHref} />}
-              nativeButton={false}
-              size="lg"
-              className="mt-10 rounded-chip bg-sunset px-6 text-navy-950 hover:bg-[color-mix(in_oklch,var(--color-sunset),black_8%)]"
-            >
-              {ctaLabel}
-            </Button>
+            <Countdown size="hero" light />
           </div>
+
+          {stats && (stats.applications > 0 || stats.schools > 0) && (
+            <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-6 sm:max-w-md">
+              <div>
+                <dt className="text-2xs text-white/45">Applications</dt>
+                <dd className="font-hero text-h2 font-bold tabular-nums text-paper">
+                  {stats.applications.toLocaleString()}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-2xs text-white/45">Schools</dt>
+                <dd className="font-hero text-h2 font-bold tabular-nums text-sky">
+                  {stats.schools.toLocaleString()}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-2xs text-white/45">Accepted</dt>
+                <dd className="font-hero text-h2 font-bold tabular-nums text-cal-gold">
+                  {stats.accepted.toLocaleString()}
+                </dd>
+              </div>
+            </dl>
+          )}
+
+          <Button
+            render={<Link href={ctaHref} />}
+            nativeButton={false}
+            size="lg"
+            className="mt-10 rounded-chip bg-sunset px-6 font-ui text-navy-950 hover:bg-[color-mix(in_oklch,var(--color-sunset),black_8%)]"
+          >
+            {ctaLabel}
+          </Button>
         </div>
       </div>
-    </main>
+    </HeroParallax>
   );
 }

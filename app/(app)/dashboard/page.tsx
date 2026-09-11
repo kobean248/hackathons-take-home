@@ -3,18 +3,21 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { APPLICATION_TYPES } from "@/lib/applicationTypes";
 import { pipelineStepsForStatus } from "@/lib/application-pipeline";
+import { PRIORITY_DEADLINE, daysUntil } from "@/lib/deadlines";
 import { StatusBadge } from "@/components/apply/status-badge";
 import { EmptyApplicationState } from "@/components/apply/empty-application-state";
 import { Timeline } from "@/components/timeline";
 import { Countdown } from "@/components/countdown/countdown";
 import { AcceptanceNextSteps } from "@/components/dashboard/acceptance-next-steps";
+import { QuickStatCard } from "@/components/dashboard/quick-stat-card";
+import { ApplicationsIcon, QueueIcon, TeamsIcon } from "@/components/icons";
 import {
   BearCelebrating,
   BearFlying,
   BearSleeping,
   BearWaving,
-  GlobeCurve,
 } from "@/components/illustrations";
+import { CampanileTower } from "@/components/illustrations/berkeley-scenes";
 import type { ApplicationRow, ApplicationStatus, AppRole } from "@/types";
 
 function firstNameFrom(
@@ -143,6 +146,17 @@ export default async function DashboardPage({
     }
   }
 
+  const { data: membership } = await supabase
+    .from("team_members")
+    .select("teams(name)")
+    .eq("user_id", user.id)
+    .maybeSingle<{ teams: { name: string } | { name: string }[] | null }>();
+  const teamRaw = membership?.teams;
+  const teamName = Array.isArray(teamRaw) ? teamRaw[0]?.name : teamRaw?.name;
+
+  const draftCount = apps.filter((a) => a.status === "draft").length;
+  const daysUntilDeadline = daysUntil(PRIORITY_DEADLINE);
+
   return (
     <main className="flex flex-col gap-6">
       {error && (
@@ -168,8 +182,8 @@ export default async function DashboardPage({
       )}
 
       <section className="relative overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
-        <GlobeCurve className="pointer-events-none absolute -bottom-16 -right-20 w-[120%] max-w-xl opacity-[0.14] sm:-right-10 sm:w-[70%] sm:opacity-[0.18]" />
-        <BearWaving className="pointer-events-none absolute -right-2 top-2 w-24 opacity-90 sm:right-4 sm:top-4 sm:w-32" />
+        <CampanileTower className="pointer-events-none absolute -right-4 -bottom-10 h-[140%] opacity-[0.12] sm:-right-2 sm:h-[160%] sm:opacity-[0.16]" />
+        <BearWaving className="pointer-events-none absolute right-6 top-6 w-28 opacity-95 sm:right-10 sm:top-8 sm:w-36" />
 
         <div className="relative z-10 max-w-lg">
           <p className="text-2xs font-medium text-ink-soft">
@@ -187,6 +201,40 @@ export default async function DashboardPage({
           </div>
         </div>
       </section>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <QuickStatCard
+          icon={<ApplicationsIcon className="size-5" />}
+          label="Your applications"
+          value={
+            apps.length === 0
+              ? "None yet"
+              : draftCount > 0
+                ? `${draftCount} draft${draftCount === 1 ? "" : "s"}`
+                : `${apps.length} in progress`
+          }
+          href="/apply"
+          cta="Manage"
+        />
+        <QuickStatCard
+          icon={<QueueIcon className="size-5" />}
+          label="Upcoming"
+          value={
+            daysUntilDeadline > 0
+              ? `Priority due in ${daysUntilDeadline}d`
+              : "Priority round closed"
+          }
+          href="/apply"
+          cta="View deadline"
+        />
+        <QuickStatCard
+          icon={<TeamsIcon className="size-5" />}
+          label="Team"
+          value={teamName || "Not on a team yet"}
+          href="/teams"
+          cta={teamName ? "View team" : "Find a team"}
+        />
+      </div>
 
       {apps.length === 0 ? (
         <EmptyApplicationState />

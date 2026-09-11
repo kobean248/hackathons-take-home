@@ -1,6 +1,7 @@
 // Rounded-pill, line-bordered chip for deadlines — flat replacement for
 // the marketing site's soft cloud call-outs. Light-surface variant for
 // paper backgrounds; see design-doc.md §4 (Clouds → chips) and §6.
+import { QueueIcon } from "@/components/icons";
 
 type DeadlineChipProps = {
   date: Date | string;
@@ -18,7 +19,8 @@ export function DeadlineChip({ date, label = "Deadline" }: DeadlineChipProps) {
         });
 
   return (
-    <span className="inline-flex items-center rounded-full border border-line px-3 py-1 text-2xs font-medium text-ink-soft">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-2xs font-medium text-ink-soft">
+      <QueueIcon className="size-3.5" />
       {label}: {formatted}
     </span>
   );

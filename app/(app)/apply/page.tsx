@@ -4,49 +4,46 @@ import { createClient } from "@/lib/supabase/server";
 import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTypes";
 import { StatusBadge } from "@/components/apply/status-badge";
 import { DeadlineChip } from "@/components/deadline-chip";
-import {
-  BearCelebrating,
-  BearFlying,
-  BearWaving,
-  CloudShape,
-} from "@/components/illustrations";
+import { CatalogSeal } from "@/components/brand/catalog-seal";
+import { GraduationCapIcon, QueueIcon } from "@/components/icons";
 import { PRIORITY_DEADLINE_LABEL } from "@/lib/deadlines";
 import type { ApplicationStatus } from "@/types";
 
 const TYPES = Object.keys(APPLICATION_TYPES) as ApplicationTypeKey[];
 
-const ROLE_META: Record<
+/** CalCentral-flavored course cards — Berkeley-only joke. */
+const COURSE_META: Record<
   ApplicationTypeKey,
-  { blurb: string; pose: "flying" | "waving" | "celebrating"; accent: string }
+  {
+    code: string;
+    units: string;
+    instructor: string;
+    prereq: string;
+    blurb: string;
+  }
 > = {
   hacker: {
-    blurb: "Build something wild. Full application + rubric review.",
-    pose: "flying",
-    accent: "var(--color-sunset)",
+    code: "HACK 189",
+    units: "3 units",
+    instructor: "MLH / Cal Hacks",
+    prereq: "Enthusiasm",
+    blurb: "Full application + rubric review. Ship something wild.",
   },
   mentor: {
+    code: "MENT 101",
+    units: "1 unit",
+    instructor: "Industry staff",
+    prereq: "Experience",
     blurb: "Help teams unstick. Lighter form, organizer decision.",
-    pose: "waving",
-    accent: "var(--color-sky)",
   },
   volunteer: {
+    code: "VOL 10A",
+    units: "P/NP",
+    instructor: "Ops crew",
+    prereq: "None",
     blurb: "Keep the event flying. Short form, accept/reject.",
-    pose: "celebrating",
-    accent: "var(--color-mint)",
   },
 };
-
-function RoleBear({
-  pose,
-  className,
-}: {
-  pose: "flying" | "waving" | "celebrating";
-  className?: string;
-}) {
-  if (pose === "waving") return <BearWaving className={className} />;
-  if (pose === "celebrating") return <BearCelebrating className={className} />;
-  return <BearFlying className={className} />;
-}
 
 export default async function ApplyPage() {
   const supabase = await createClient();
@@ -71,19 +68,15 @@ export default async function ApplyPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="relative overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
-        <CloudShape
-          variant={2}
-          cream="var(--color-sky)"
-          className="pointer-events-none absolute -right-8 -top-6 w-48 opacity-[0.12]"
-        />
+        <CatalogSeal className="pointer-events-none absolute -right-3 -top-3 w-24 opacity-90 sm:w-28" />
         <div className="relative z-10">
           <DeadlineChip date={PRIORITY_DEADLINE_LABEL} label="Priority due" />
-          <h1 className="mt-3 font-display text-h1 font-semibold tracking-tight text-ink">
-            Choose a role
+          <h1 className="mt-3 font-hero text-h1 font-extrabold tracking-tight text-ink">
+            Course registration
           </h1>
           <p className="mt-2 max-w-prose text-sm text-ink-soft">
-            Apply as a hacker, mentor, or volunteer. You can start more than
-            one — each has its own form and status.
+            Pick a role like you&apos;d add a class in CalCentral — you can
+            enroll in more than one.
           </p>
         </div>
       </header>
@@ -91,50 +84,79 @@ export default async function ApplyPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         {TYPES.map((type) => {
           const config = APPLICATION_TYPES[type];
-          const meta = ROLE_META[type];
+          const course = COURSE_META[type];
           const status = statusByType.get(type);
           const cta = status
             ? status === "draft"
               ? "Continue draft"
               : "View application"
-            : "Start application";
+            : "Add to cart";
 
           return (
             <Link
               key={type}
               href={`/apply/${type}`}
-              className="group relative flex flex-col overflow-hidden rounded-xl border border-line bg-surface p-5 hover:border-ink/20"
+              className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface hover:border-berkeley/40"
             >
-              <CloudShape
-                variant={4}
-                cream={meta.accent}
-                className="pointer-events-none absolute -bottom-4 -right-4 w-28 opacity-[0.14] transition-opacity group-hover:opacity-[0.22]"
-              />
-              <RoleBear
-                pose={meta.pose}
-                className="relative z-10 mb-3 w-20 self-end sm:w-24"
-              />
-              <div className="relative z-10 mt-auto flex flex-col gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="font-display text-h3 font-semibold text-ink">
+              <div className="flex items-center justify-between border-b border-line bg-berkeley px-4 py-2.5">
+                <span className="font-ui text-2xs font-semibold tracking-wide text-cal-gold">
+                  {course.code}
+                </span>
+                <span className="font-ui text-2xs text-white/70">
+                  {course.units}
+                </span>
+              </div>
+              <div className="flex flex-1 flex-col gap-3 p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="font-hero text-h3 font-bold text-ink">
                     {config.label}
                   </h2>
                   {status ? (
                     <StatusBadge status={status} />
                   ) : (
-                    <span className="text-2xs text-ink-soft">Not started</span>
+                    <span className="text-2xs text-ink-soft">Open</span>
                   )}
                 </div>
+                <dl className="space-y-1.5 text-2xs text-ink-soft">
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="flex items-center gap-1.5">
+                      <GraduationCapIcon className="size-3.5" />
+                      Instructor
+                    </dt>
+                    <dd className="font-medium text-ink">{course.instructor}</dd>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    <dt>Prerequisites</dt>
+                    <dd className="font-medium text-ink">{course.prereq}</dd>
+                  </div>
+                </dl>
                 <p className="text-2xs leading-relaxed text-ink-soft">
-                  {meta.blurb}
+                  {course.blurb}
                 </p>
-                <span className="mt-2 text-sm font-medium text-sunset">
+                <span className="mt-auto pt-2 text-sm font-medium text-sunset">
                   {cta} →
                 </span>
               </div>
             </Link>
           );
         })}
+      </div>
+
+      <div className="flex flex-col items-start gap-2 rounded-xl border border-line bg-surface px-5 py-4 text-2xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
+        <span className="flex items-center gap-1.5">
+          <QueueIcon className="size-3.5 shrink-0" />
+          Add/drop deadline: priority round closes{" "}
+          <span className="font-medium text-ink">
+            {PRIORITY_DEADLINE_LABEL}
+          </span>
+          . Late enrollment is reviewed at organizer discretion.
+        </span>
+        <Link
+          href="/faq"
+          className="shrink-0 font-medium text-sunset hover:underline"
+        >
+          Registration FAQ →
+        </Link>
       </div>
     </div>
   );
