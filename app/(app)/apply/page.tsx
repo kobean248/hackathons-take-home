@@ -7,6 +7,8 @@ import { DeadlineChip } from "@/components/deadline-chip";
 import { CatalogSeal } from "@/components/brand/catalog-seal";
 import { CheckIcon, GraduationCapIcon, QueueIcon } from "@/components/icons";
 import { PRIORITY_DEADLINE_LABEL } from "@/lib/deadlines";
+import { PortalHero } from "@/components/shell/portal-hero";
+import { SceneSatherGate } from "@/components/illustrations/berkeley-scenes";
 import type { ApplicationStatus } from "@/types";
 
 const TYPES = Object.keys(APPLICATION_TYPES) as ApplicationTypeKey[];
@@ -71,19 +73,18 @@ export default async function ApplyPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="glass relative overflow-hidden rounded-xl p-6 sm:p-8">
-        <CatalogSeal className="pointer-events-none absolute -right-3 -top-3 w-24 opacity-90 sm:w-28" />
-        <div className="relative z-10">
+      <PortalHero
+        title="Course registration"
+        description="Pick a role like you’d add a class in CalCentral — you can enroll in more than one."
+        scene={<SceneSatherGate className="h-full w-full" />}
+        seal={
+          <CatalogSeal className="pointer-events-none absolute -right-3 -top-3 z-[1] w-24 opacity-90 sm:w-28" />
+        }
+      >
+        <div className="mt-4">
           <DeadlineChip date={PRIORITY_DEADLINE_LABEL} label="Priority due" />
-          <h1 className="mt-3 font-hero text-h1 font-extrabold tracking-tight text-ink">
-            Course registration
-          </h1>
-          <p className="mt-2 max-w-prose text-sm text-ink-soft">
-            Pick a role like you&apos;d add a class in CalCentral — you can
-            enroll in more than one.
-          </p>
         </div>
-      </header>
+      </PortalHero>
 
       <div className="flex flex-col gap-3">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -101,7 +102,7 @@ export default async function ApplyPage() {
             <Link
               key={type}
               href={`/apply/${type}`}
-              className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface hover:border-berkeley/40"
+              className="card-lift group flex flex-col overflow-hidden rounded-xl border border-line bg-surface"
             >
               <div className="border-b border-line bg-berkeley px-4 py-2.5">
                 <div className="flex items-center justify-between">

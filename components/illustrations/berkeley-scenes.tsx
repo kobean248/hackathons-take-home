@@ -388,3 +388,126 @@ export function SceneTracksTrophy({ className, ...rest }: SceneProps) {
     </svg>
   );
 }
+
+/** Apply — Sather Gate silhouette + course cart hint. */
+export function SceneSatherGate({ className, ...rest }: SceneProps) {
+  return (
+    <svg
+      viewBox="0 0 520 280"
+      fill="none"
+      className={className}
+      aria-hidden
+      {...rest}
+    >
+      {/* Hills */}
+      <path
+        d="M0 200c60-30 120-40 200-28 70 10 120 35 200 28 50-4 80-20 120-16v96H0V200Z"
+        fill="var(--color-berkeley)"
+        opacity={0.35}
+      />
+      {/* Gate columns */}
+      <g fill="var(--color-cal-gold)">
+        <rect x="90" y="70" width="28" height="150" rx="2" />
+        <rect x="400" y="70" width="28" height="150" rx="2" />
+        <rect x="70" y="55" width="68" height="22" rx="3" />
+        <rect x="380" y="55" width="68" height="22" rx="3" />
+      </g>
+      {/* Arch */}
+      <path
+        d="M118 100h282c0 0-20 70-141 70S118 100 118 100Z"
+        fill="var(--color-berkeley)"
+        opacity={0.55}
+      />
+      <path
+        d="M130 100h258c0 0-18 55-129 55S130 100 130 100Z"
+        fill="var(--color-navy-800)"
+        opacity={0.5}
+      />
+      {/* Cart / enrollment chip */}
+      <g transform="translate(220 150)">
+        <rect width="90" height="36" rx="8" fill="var(--color-sunset)" />
+        <text
+          x="45"
+          y="23"
+          textAnchor="middle"
+          fill="var(--color-navy-950)"
+          fontSize="11"
+          fontFamily="var(--font-ui), sans-serif"
+          fontWeight="700"
+        >
+          Add to cart
+        </text>
+      </g>
+    </svg>
+  );
+}
+
+/** Organizer console — inbox stack + stamp. */
+export function SceneReviewInbox({ className, ...rest }: SceneProps) {
+  return (
+    <svg
+      viewBox="0 0 480 240"
+      fill="none"
+      className={className}
+      aria-hidden
+      {...rest}
+    >
+      <rect x="40" y="160" width="400" height="24" rx="4" fill="var(--color-navy-800)" />
+      <g>
+        <rect x="90" y="90" width="200" height="70" rx="6" fill="var(--color-paper)" />
+        <rect x="110" y="70" width="200" height="70" rx="6" fill="var(--color-sky)" opacity={0.35} />
+        <rect x="130" y="50" width="200" height="70" rx="6" fill="var(--color-cal-gold)" opacity={0.55} />
+        <rect x="150" y="30" width="200" height="70" rx="6" fill="var(--color-paper)" />
+        <rect x="166" y="48" width="120" height="8" rx="2" fill="var(--color-berkeley)" opacity={0.35} />
+        <rect x="166" y="64" width="90" height="6" rx="2" fill="var(--color-ink-soft)" opacity={0.35} />
+      </g>
+      {/* Stamp */}
+      <g transform="translate(320 40)">
+        <circle cx="48" cy="48" r="40" fill="none" stroke="var(--color-sunset)" strokeWidth={4} opacity={0.85} />
+        <text
+          x="48"
+          y="44"
+          textAnchor="middle"
+          fill="var(--color-sunset)"
+          fontSize="11"
+          fontFamily="var(--font-hero), sans-serif"
+          fontWeight="800"
+        >
+          REVIEW
+        </text>
+        <text
+          x="48"
+          y="60"
+          textAnchor="middle"
+          fill="var(--color-sunset)"
+          fontSize="10"
+          fontFamily="var(--font-ui), sans-serif"
+          fontWeight="600"
+        >
+          QUEUE
+        </text>
+      </g>
+    </svg>
+  );
+}
+
+/** Settings — locker / profile card motif. */
+export function SceneProfileLocker({ className, ...rest }: SceneProps) {
+  return (
+    <svg
+      viewBox="0 0 420 260"
+      fill="none"
+      className={className}
+      aria-hidden
+      {...rest}
+    >
+      <rect x="120" y="30" width="180" height="200" rx="10" fill="var(--color-berkeley)" />
+      <rect x="136" y="48" width="148" height="100" rx="6" fill="var(--color-navy-800)" />
+      <circle cx="210" cy="88" r="28" fill="var(--color-cal-gold)" opacity={0.85} />
+      <ellipse cx="210" cy="130" rx="40" ry="18" fill="var(--color-cal-gold)" opacity={0.45} />
+      <rect x="150" y="168" width="120" height="10" rx="3" fill="var(--color-cal-gold)" opacity={0.5} />
+      <rect x="165" y="188" width="90" height="8" rx="3" fill="var(--color-sky)" opacity={0.5} />
+      <circle cx="278" cy="160" r="10" fill="var(--color-sunset)" />
+    </svg>
+  );
+}

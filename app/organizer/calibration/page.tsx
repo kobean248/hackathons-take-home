@@ -2,6 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isCalibrationComplete, type RubricScores } from "@/lib/organizer-ops";
 import { OrganizerEmpty } from "@/components/organizer/organizer-empty";
+import { PortalHero } from "@/components/shell/portal-hero";
+import { SceneFaqSearch } from "@/components/illustrations/berkeley-scenes";
+import { RingProgress } from "@/components/viz/ring-progress";
 
 type SampleRow = {
   id: string;
@@ -36,23 +39,28 @@ export default async function CalibrationPage() {
     : { data: [] as AttemptRow[] };
 
   const doneIds = new Set((attempts ?? []).map((a) => a.sample_id));
-  const complete = isCalibrationComplete(
-    samples?.length ?? 0,
-    doneIds.size
-  );
+  const sampleCount = samples?.length ?? 0;
+  const complete = isCalibrationComplete(sampleCount, doneIds.size);
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-h2 font-semibold text-ink">
-          Calibration
-        </h1>
-        <p className="mt-1 max-w-prose text-sm text-ink-soft">
-          Grade three gold-standard samples before reviewing real applications.
-          After you submit, you&apos;ll see how your scores compare to the
-          organizer gold standard.
-        </p>
-      </div>
+      <PortalHero
+        eyebrow="Organizer"
+        title="Calibration"
+        description="Grade three gold-standard samples before reviewing real applications. After you submit, you'll see how your scores compare to the organizer gold standard."
+        scene={<SceneFaqSearch className="h-full w-full" />}
+      >
+        {sampleCount > 0 && (
+          <div className="mt-5">
+            <RingProgress
+              value={doneIds.size}
+              max={sampleCount}
+              size={36}
+              label={`${doneIds.size} of ${sampleCount} samples graded`}
+            />
+          </div>
+        )}
+      </PortalHero>
 
       {complete && (
         <p className="rounded-xl border border-mint/30 bg-mint/10 px-4 py-3 text-sm text-mint">
@@ -73,7 +81,7 @@ export default async function CalibrationPage() {
               <li key={sample.id}>
                 <Link
                   href={`/organizer/calibration/${sample.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-4 transition-colors hover:bg-paper"
+                  className="card-lift flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-4"
                 >
                   <div>
                     <p className="text-2xs text-ink-soft">Sample {i + 1}</p>

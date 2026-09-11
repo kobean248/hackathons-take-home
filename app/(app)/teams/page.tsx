@@ -9,6 +9,8 @@ import { BearSleeping, BearWaving } from "@/components/illustrations";
 import { QuestionIcon } from "@/components/icons";
 import { CatalogSeal } from "@/components/brand/catalog-seal";
 import { Avatar } from "@/components/avatar";
+import { PortalHero } from "@/components/shell/portal-hero";
+import { SceneTeamWorkbench } from "@/components/illustrations/berkeley-scenes";
 
 type TeamRow = {
   id: string;
@@ -128,23 +130,22 @@ export default async function TeamsPage() {
 
   return (
     <main className="flex flex-col gap-8">
-      <section className="glass relative overflow-hidden rounded-xl p-6 sm:p-8">
-        <BearWaving className="pointer-events-none absolute -right-2 top-2 w-24 opacity-90 sm:right-4 sm:w-28" />
-        <CatalogSeal
-          topText="TEAM"
-          bottomText="ROSTER"
-          className="pointer-events-none absolute bottom-2 right-3 w-14 opacity-70 sm:bottom-3 sm:right-6"
-        />
-        <div className="relative z-10 max-w-lg">
-          <p className="text-2xs font-medium text-ink-soft">Teams</p>
-          <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight text-ink">
-            Find your crew
-          </h1>
-          <p className="mt-3 text-sm text-ink-soft">
-            Create a team, share a join code, or browse people still looking.
-          </p>
-        </div>
-      </section>
+      <PortalHero
+        eyebrow="Teams"
+        title="Find your crew"
+        description="Create a team, share a join code, or browse people still looking."
+        scene={<SceneTeamWorkbench className="h-full w-full" />}
+        seal={
+          <>
+            <BearWaving className="pointer-events-none absolute right-4 top-3 z-[1] w-20 opacity-90 sm:right-6 sm:w-24 md:hidden" />
+            <CatalogSeal
+              topText="TEAM"
+              bottomText="ROSTER"
+              className="pointer-events-none absolute bottom-2 right-3 z-[1] w-14 opacity-70 sm:bottom-3 sm:right-6"
+            />
+          </>
+        }
+      />
 
       {myTeam ? (
         <section className="rounded-xl border border-line bg-surface p-6">

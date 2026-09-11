@@ -21,6 +21,7 @@ import {
 } from "@/components/illustrations";
 import { CampanileTower } from "@/components/illustrations/berkeley-scenes";
 import { CatalogSeal } from "@/components/brand/catalog-seal";
+import { PortalHero } from "@/components/shell/portal-hero";
 import { Avatar } from "@/components/avatar";
 import type { ApplicationRow, ApplicationStatus, AppRole } from "@/types";
 
@@ -222,38 +223,22 @@ export default async function DashboardPage({
         </Link>
       )}
 
-      <section className="glass relative overflow-hidden rounded-xl p-6 sm:p-8">
-        <div
-          className="pointer-events-none absolute -right-4 -bottom-10 h-[140%] opacity-[0.14] sm:-right-2 sm:h-[160%] sm:opacity-[0.18]"
-          style={{
-            maskImage: "linear-gradient(to left, black 45%, transparent 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to left, black 45%, transparent 100%)",
-          }}
-        >
-          <CampanileTower className="h-full w-auto" />
+      <PortalHero
+        eyebrow={`Welcome, ${firstName}`}
+        title={statusHeadline(apps, roleLabel)}
+        scene={<CampanileTower className="h-full w-auto max-w-none" />}
+        seal={
+          <>
+            <BearWaving className="pointer-events-none absolute right-6 top-6 z-[1] w-28 opacity-95 sm:right-10 sm:top-8 sm:w-36" />
+            <CatalogSeal className="pointer-events-none absolute bottom-3 right-3 z-[1] w-14 opacity-60 sm:bottom-4 sm:right-6" />
+          </>
+        }
+      >
+        <div className="mt-8">
+          <p className="mb-2 text-2xs font-medium text-ink-soft">Until kickoff</p>
+          <Countdown size="inline" />
         </div>
-        <BearWaving className="pointer-events-none absolute right-6 top-6 w-28 opacity-95 sm:right-10 sm:top-8 sm:w-36" />
-        <CatalogSeal
-          className="pointer-events-none absolute bottom-3 right-3 w-14 opacity-60 sm:bottom-4 sm:right-6"
-        />
-
-        <div className="relative z-10 max-w-lg">
-          <p className="text-2xs font-medium text-ink-soft">
-            Welcome, {firstName}
-          </p>
-          <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight text-ink">
-            {statusHeadline(apps, roleLabel)}
-          </h1>
-
-          <div className="mt-8">
-            <p className="mb-2 text-2xs font-medium text-ink-soft">
-              Until kickoff
-            </p>
-            <Countdown size="inline" />
-          </div>
-        </div>
-      </section>
+      </PortalHero>
 
       <div className="grid items-start gap-4 sm:grid-cols-3">
         <QuickStatCard

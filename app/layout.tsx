@@ -1,30 +1,27 @@
 import type { Metadata } from "next";
-import {
-  Space_Grotesk,
-  IBM_Plex_Sans,
-  Bricolage_Grotesque,
-} from "next/font/google";
+import { Syne, Outfit, Source_Sans_3 } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { AmbientBackground } from "@/components/shell/ambient-background";
 import { ToastProvider } from "@/components/shell/toast-provider";
 import "./globals.css";
 
-// Characterful display face for hero headlines / section titles —
-// Space Grotesk stays on UI chrome (nav, buttons, labels).
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+// Syne — angular, distinctive display (not the usual AI-default grotesk).
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
   weight: ["600", "700", "800"],
 });
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+// Outfit — geometric UI chrome that still feels designed.
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const ibmPlexSans = IBM_Plex_Sans({
-  variable: "--font-ibm-plex-sans",
+// Source Sans 3 — readable working-page body, campus-adjacent without Inter.
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
@@ -38,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${spaceGrotesk.variable} ${ibmPlexSans.variable} h-full antialiased`}
+      className={`${syne.variable} ${outfit.variable} ${sourceSans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <AmbientBackground />

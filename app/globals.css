@@ -29,10 +29,10 @@
   --color-berkeley: #003262;
   --color-cal-gold: #fdb515;
 
-  --font-hero: var(--font-bricolage), var(--font-space-grotesk), sans-serif;
-  --font-display: var(--font-bricolage), var(--font-space-grotesk), sans-serif;
-  --font-ui: var(--font-space-grotesk), var(--font-ibm-plex-sans), sans-serif;
-  --font-sans: var(--font-ibm-plex-sans), sans-serif;
+  --font-hero: var(--font-syne), var(--font-outfit), sans-serif;
+  --font-display: var(--font-syne), var(--font-outfit), sans-serif;
+  --font-ui: var(--font-outfit), var(--font-source-sans), sans-serif;
+  --font-sans: var(--font-source-sans), sans-serif;
 
   /* type scale: 12/13/14/16/20/24/32/44 — only these stops */
   --text-2xs: 0.8125rem; /* 13px */
@@ -139,7 +139,7 @@
     outline-offset: 2px;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
   }
   html {
     @apply font-sans;
@@ -149,7 +149,11 @@
   h3 {
     @apply font-hero;
   }
-}
+  button,
+  [data-slot="button"],
+  .font-ui {
+    font-family: var(--font-ui);
+  }
 
 /* Landing-only plane trail on hover of interactive controls */
 .hero-interactive .hero-plane {
@@ -561,4 +565,11 @@
   .pressable:active:not(:disabled) {
     transform: none;
   }
+}
+
+/* Soft campus motif under portal heroes — Campanile + eucalyptus marks. */
+.portal-pattern {
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23003262' stroke-width='1.4'%3E%3Cpath d='M28 98V42l12-18 12 18v56'/%3E%3Ccircle cx='40' cy='48' r='6'/%3E%3Cpath d='M78 90c8-18 22-22 30-8-14 2-20 12-22 24'/%3E%3Cpath d='M86 70c-2-14 8-24 18-18'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 120px;
 }

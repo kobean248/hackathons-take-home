@@ -18,6 +18,9 @@ import {
 } from "@/lib/fraud-flags";
 import { isCalibrationComplete } from "@/lib/organizer-ops";
 import { APPLICATION_STATUSES, type ApplicationStatus } from "@/types";
+import { PortalHero } from "@/components/shell/portal-hero";
+import { SceneReviewInbox } from "@/components/illustrations/berkeley-scenes";
+import { CountUp } from "@/components/count-up";
 
 type Row = {
   id: string;
@@ -246,23 +249,37 @@ export default async function OrganizerApplicationsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-display text-h2 font-semibold text-ink">
-          {mineOnly ? "My queue" : "Applications"}
-        </h1>
-        {isReviewer && (
-          <Link
-            href={
-              mineOnly
-                ? "/organizer/applications"
-                : "/organizer/applications?assigned_to_me=true"
-            }
-            className="text-sm text-sky underline-offset-2 hover:underline"
-          >
-            {mineOnly ? "View all applications" : "View my queue"}
-          </Link>
-        )}
-      </div>
+      <PortalHero
+        eyebrow="Organizer"
+        title={mineOnly ? "My queue" : "Applications"}
+        description={
+          mineOnly
+            ? "Assigned hacker applications waiting on your rubric scores."
+            : "Filter, flag, and open applications across every track."
+        }
+        scene={<SceneReviewInbox className="h-full w-full" />}
+      >
+        <div className="mt-5 flex flex-wrap items-center gap-4">
+          <p className="font-hero text-h3 font-bold tabular-nums text-ink">
+            <CountUp value={applications.length} />
+            <span className="ml-2 text-sm font-medium text-ink-soft">
+              shown
+            </span>
+          </p>
+          {isReviewer && (
+            <Link
+              href={
+                mineOnly
+                  ? "/organizer/applications"
+                  : "/organizer/applications?assigned_to_me=true"
+              }
+              className="text-sm font-medium text-sky underline-offset-2 hover:underline"
+            >
+              {mineOnly ? "View all applications" : "View my queue"}
+            </Link>
+          )}
+        </div>
+      </PortalHero>
 
       {error && (
         <p className="rounded-chip bg-brick/10 px-3 py-2 text-sm text-brick">

@@ -6,6 +6,8 @@ import { OrganizerEmpty } from "@/components/organizer/organizer-empty";
 import { AnimatedBarChart } from "@/components/viz/animated-bar-chart";
 import { MiniSparkline } from "@/components/viz/mini-sparkline";
 import { CountUp } from "@/components/count-up";
+import { PortalHero } from "@/components/shell/portal-hero";
+import { SceneTracksTrophy } from "@/components/illustrations/berkeley-scenes";
 import type { ApplicationStatus } from "@/types";
 
 const TYPES = Object.keys(APPLICATION_TYPES) as ApplicationTypeKey[];
@@ -169,20 +171,22 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-h2 font-semibold text-ink">
-          Analytics
-        </h1>
-        <div className="flex items-center gap-6">
+      <PortalHero
+        eyebrow="Organizer"
+        title="Analytics"
+        description="Funnel health, capacity against targets, and score distribution across hacker reviews."
+        scene={<SceneTracksTrophy className="h-full w-full" />}
+      >
+        <div className="mt-6 flex flex-wrap items-end gap-6">
           <div>
             <p className="text-2xs text-ink-soft">Total apps</p>
-            <p className="font-display text-h3 font-semibold tabular-nums text-ink">
+            <p className="font-hero text-h3 font-bold tabular-nums text-ink">
               <CountUp value={totalApps} />
             </p>
           </div>
           <div>
             <p className="text-2xs text-ink-soft">In funnel</p>
-            <p className="font-display text-h3 font-semibold tabular-nums text-ink">
+            <p className="font-hero text-h3 font-bold tabular-nums text-ink">
               <CountUp value={submittedish} />
             </p>
           </div>
@@ -194,7 +198,7 @@ export default async function AnalyticsPage() {
             />
           )}
         </div>
-      </div>
+      </PortalHero>
 
       <CapacityTargetsCard targets={capacityTargets} />
 
