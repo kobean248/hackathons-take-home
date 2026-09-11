@@ -85,6 +85,34 @@ export default async function ApplicationDetailPage({
     application.type === "hacker" &&
     (viewerProfile?.role === "organizer" || viewerProfile?.role === "reviewer");
 
+  let capacity: {
+    accepted: number;
+    target: number;
+    typeLabel: string;
+  } | null = null;
+
+  if (viewerProfile?.role === "organizer") {
+    const [{ count }, { data: targetRow }] = await Promise.all([
+      supabase
+        .from("applications")
+        .select("id", { count: "exact", head: true })
+        .eq("type", application.type)
+        .eq("status", "accepted"),
+      supabase
+        .from("capacity_targets")
+        .select("target")
+        .eq("type", application.type)
+        .maybeSingle(),
+    ]);
+    if (targetRow) {
+      capacity = {
+        accepted: count ?? 0,
+        target: targetRow.target,
+        typeLabel: config.label,
+      };
+    }
+  }
+
   let myReview: { scores: Scores; comments: string | null } | null = null;
   let allReviews: ReviewRow[] = [];
 
@@ -129,6 +157,7 @@ export default async function ApplicationDetailPage({
       <DecisionButtons
         applicationId={application.id}
         currentStatus={application.status}
+        capacity={capacity}
       />
 
       <div className="rounded-xl border border-border bg-card p-6">

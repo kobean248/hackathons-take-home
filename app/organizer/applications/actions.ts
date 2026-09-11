@@ -60,6 +60,7 @@ export async function decideApplication(
 
   revalidatePath(`/organizer/applications/${applicationId}`);
   revalidatePath("/organizer/applications");
+  revalidatePath("/organizer/analytics");
 }
 
 export async function submitReview(
