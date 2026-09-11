@@ -58,11 +58,28 @@ route protection lives in `proxy.ts`, not `middleware.ts`.
    or paste each file's contents into the SQL editor in order, if you'd
    rather not link the CLI.
 
-5. **Enable Google OAuth** — in the Supabase dashboard under
-   **Authentication → Providers**, turn on Google and add your OAuth client
-   ID/secret. Email/password is on by default and needs no extra setup.
+5. **Fix the signup confirmation email template** — required, not optional,
+   or every signup will land on `/auth/auth-code-error`. Supabase's default
+   "Confirm signup" template links straight to Supabase's own hosted verify
+   endpoint, which consumes the token itself before our
+   `app/auth/confirm/route.ts` ever sees it. In the dashboard, go to
+   **Authentication → Email Templates → Confirm signup** and replace the
+   confirmation link's `href="{{ .ConfirmationURL }}"` with:
 
-6. **Promote yourself to organizer** — sign up once through the app, then
+   ```
+   {{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email
+   ```
+
+   (`{{ .RedirectTo }}` is whatever `emailRedirectTo` was passed at signup —
+   already `.../auth/confirm?next=/dashboard` — so this just appends the two
+   params our route actually reads.)
+
+6. **Enable Google OAuth** — in the Supabase dashboard under
+   **Authentication → Providers**, turn on Google and add your OAuth client
+   ID/secret. Email/password is on by default and needs no extra setup
+   beyond step 5 above.
+
+7. **Promote yourself to organizer** — sign up once through the app, then
    in the SQL editor:
 
    ```sql
@@ -71,7 +88,7 @@ route protection lives in `proxy.ts`, not `middleware.ts`.
 
    (Reviewers are promoted the same way, with `role = 'reviewer'`.)
 
-7. **(Optional) Seed demo data** — creates 3 organizers, 5 reviewers, and 30
+8. **(Optional) Seed demo data** — creates 3 organizers, 5 reviewers, and 30
    fake applicants with realistic applications, so the organizer views and
    `/organizer/analytics` have real numbers to look at:
 
@@ -83,7 +100,7 @@ route protection lives in `proxy.ts`, not `middleware.ts`.
    `localhost` or you pass `SEED_CONFIRM=yes` — it creates real auth users,
    so it shouldn't be pointed at a project other people are using.
 
-8. **Run it**
+9. **Run it**
 
    ```bash
    pnpm dev
@@ -250,8 +267,9 @@ data — the database enforces it independent of which code path reaches it
 - Migrations haven't been applied to a real Supabase project in this
   environment (no Docker/CLI login available while building this) — run
   them yourself per Setup step 4 before expecting anything to work.
-- The Google OAuth provider needs to be turned on manually in the Supabase
-  dashboard (step 5) — nothing in code can do that part.
+- The signup email template (step 5) and the Google OAuth provider
+  (step 6) both need to be turned on manually in the Supabase dashboard —
+  nothing in code can do either part.
 - Visual design currently uses placeholder shadcn styling plus a light
   branding pass (navy landing page, pill nav, footer, consistent
   loading/error states). `design-doc.md` (git-ignored, local only) has the
