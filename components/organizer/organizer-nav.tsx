@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BracketsIcon } from "@/components/icons";
 
 const NAV = [
   { href: "/organizer/applications", label: "Applications" },
@@ -9,21 +10,28 @@ const NAV = [
   { href: "/organizer/analytics", label: "Analytics" },
 ];
 
+// Dark navy "front of house" chrome — the sidebar keeps the marketing
+// site's identity while the working area (siblings of this component)
+// stays flat/light. Row on small screens, column sidebar from md up.
 export function OrganizerNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-2 border-b border-black/[.08] pb-4 text-sm dark:border-white/[.145]">
+    <nav className="flex shrink-0 items-center gap-2 bg-navy-950 px-4 py-3 text-white md:w-56 md:flex-col md:items-stretch md:gap-1 md:px-4 md:py-6">
+      <div className="mb-2 hidden items-center gap-2 px-3 md:flex">
+        <BracketsIcon className="size-5 text-sky" />
+        <span className="font-display text-sm font-semibold">Organizer</span>
+      </div>
       {NAV.map((item) => {
         const active = pathname.startsWith(item.href);
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
+            className={`rounded-chip px-3 py-1.5 text-sm font-medium transition-colors md:py-2 ${
               active
-                ? "bg-foreground text-background"
-                : "text-zinc-600 hover:bg-black/[.04] dark:text-zinc-400 dark:hover:bg-white/[.06]"
+                ? "bg-sunset text-navy-950"
+                : "text-white/70 hover:bg-white/10 hover:text-white"
             }`}
           >
             {item.label}

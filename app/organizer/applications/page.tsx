@@ -2,6 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTypes";
 import { StatusBadge } from "@/components/apply/status-badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { APPLICATION_STATUSES, type ApplicationStatus } from "@/types";
 
 type Row = {
@@ -72,89 +75,85 @@ export default async function OrganizerApplicationsPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold">Applications</h1>
+      <h1 className="font-display text-h2 font-semibold">Applications</h1>
 
       {error && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+        <p className="rounded-chip bg-brick/10 px-3 py-2 text-sm text-brick">
           {error.message}
         </p>
       )}
 
       <form
         method="get"
-        className="flex flex-wrap items-end gap-3 rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]"
+        className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4"
       >
-        <label className="flex flex-col gap-1 text-xs">
+        <label className="flex flex-col gap-1 text-2xs text-muted-foreground">
           Type
-          <select
-            name="type"
-            defaultValue={params.type ?? ""}
-            className="rounded border border-black/[.08] px-2 py-1.5 text-sm dark:border-white/[.145] dark:bg-transparent"
-          >
+          <SelectNative name="type" defaultValue={params.type ?? ""}>
             <option value="">All</option>
             {Object.keys(APPLICATION_TYPES).map((type) => (
               <option key={type} value={type}>
                 {APPLICATION_TYPES[type as ApplicationTypeKey].label}
               </option>
             ))}
-          </select>
+          </SelectNative>
         </label>
-        <label className="flex flex-col gap-1 text-xs">
+        <label className="flex flex-col gap-1 text-2xs text-muted-foreground">
           Status
-          <select
-            name="status"
-            defaultValue={params.status ?? ""}
-            className="rounded border border-black/[.08] px-2 py-1.5 text-sm dark:border-white/[.145] dark:bg-transparent"
-          >
+          <SelectNative name="status" defaultValue={params.status ?? ""}>
             <option value="">All</option>
             {APPLICATION_STATUSES.map((status) => (
               <option key={status} value={status}>
                 {status}
               </option>
             ))}
-          </select>
+          </SelectNative>
         </label>
-        <label className="flex flex-1 flex-col gap-1 text-xs">
+        <label className="flex flex-1 flex-col gap-1 text-2xs text-muted-foreground">
           Search name or email
-          <input
+          <Input
             type="search"
             name="q"
             defaultValue={params.q ?? ""}
             placeholder="e.g. ada@berkeley.edu"
-            className="rounded border border-black/[.08] px-2 py-1.5 text-sm dark:border-white/[.145] dark:bg-transparent"
           />
         </label>
-        <button
-          type="submit"
-          className="rounded-full bg-foreground px-4 py-1.5 text-sm font-medium text-background"
-        >
-          Filter
-        </button>
+        <Button type="submit">Filter</Button>
         {(params.type || params.status || params.q) && (
           <Link
             href="/organizer/applications"
-            className="text-sm text-zinc-500 underline"
+            className="text-sm text-sunset underline"
           >
             Clear
           </Link>
         )}
       </form>
 
-      <div className="overflow-x-auto rounded-xl border border-black/[.08] dark:border-white/[.145]">
+      <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full text-left text-sm">
-          <thead className="bg-black/[.02] dark:bg-white/[.03]">
+          <thead className="bg-black/[.02]">
             <tr>
-              <th className="px-4 py-2 font-medium">Applicant</th>
-              <th className="px-4 py-2 font-medium">Type</th>
-              <th className="px-4 py-2 font-medium">Status</th>
-              <th className="px-4 py-2 font-medium">Submitted</th>
-              <th className="px-4 py-2 font-medium">Reviews</th>
+              <th className="px-4 py-2.5 text-2xs font-medium text-muted-foreground">
+                Applicant
+              </th>
+              <th className="px-4 py-2.5 text-2xs font-medium text-muted-foreground">
+                Type
+              </th>
+              <th className="px-4 py-2.5 text-2xs font-medium text-muted-foreground">
+                Status
+              </th>
+              <th className="px-4 py-2.5 text-2xs font-medium text-muted-foreground">
+                Submitted
+              </th>
+              <th className="px-4 py-2.5 text-2xs font-medium text-muted-foreground">
+                Reviews
+              </th>
             </tr>
           </thead>
           <tbody>
             {applications.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-zinc-500">
+                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
                   No applications match these filters.
                 </td>
               </tr>
@@ -162,31 +161,31 @@ export default async function OrganizerApplicationsPage({
             {applications.map((app) => (
               <tr
                 key={app.id}
-                className="border-t border-black/[.08] hover:bg-black/[.02] dark:border-white/[.145] dark:hover:bg-white/[.03]"
+                className="border-t border-border hover:bg-black/[.02]"
               >
-                <td className="px-4 py-2">
+                <td className="px-4 py-2.5">
                   <Link
                     href={`/organizer/applications/${app.id}`}
                     className="font-medium underline-offset-2 hover:underline"
                   >
                     {app.applicant?.full_name || app.applicant?.email || "—"}
                   </Link>
-                  <div className="text-xs text-zinc-500">
+                  <div className="text-2xs text-muted-foreground">
                     {app.applicant?.email}
                   </div>
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2.5">
                   {APPLICATION_TYPES[app.type].label}
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-4 py-2.5">
                   <StatusBadge status={app.status} />
                 </td>
-                <td className="px-4 py-2 text-zinc-500">
+                <td className="px-4 py-2.5 text-muted-foreground">
                   {app.submitted_at
                     ? new Date(app.submitted_at).toLocaleDateString()
                     : "—"}
                 </td>
-                <td className="px-4 py-2 text-zinc-500">
+                <td className="px-4 py-2.5 text-muted-foreground">
                   {app.type === "hacker"
                     ? `${completedCount.get(app.id) ?? 0} / ${assignedCount.get(app.id) ?? 0}`
                     : "—"}

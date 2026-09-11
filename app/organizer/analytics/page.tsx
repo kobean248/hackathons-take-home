@@ -12,6 +12,17 @@ const FUNNEL_STAGES: ApplicationStatus[] = [
   "rejected",
 ];
 
+// Same semantic mapping as StatusBadge, so a bar's color always means the
+// same thing everywhere in the app.
+const STAGE_BAR_CLASS: Record<ApplicationStatus, string> = {
+  draft: "bg-ink-soft",
+  submitted: "bg-sky",
+  under_review: "bg-amber",
+  accepted: "bg-mint",
+  waitlisted: "bg-amber",
+  rejected: "bg-brick",
+};
+
 type HackerApp = {
   id: string;
   applicant: { full_name: string | null; email: string } | null;
@@ -102,10 +113,10 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-xl font-semibold">Analytics</h1>
+      <h1 className="font-display text-h2 font-semibold">Analytics</h1>
 
-      <section className="flex flex-col gap-6 rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]">
-        <h2 className="text-sm font-semibold text-zinc-500">
+      <section className="flex flex-col gap-6 rounded-xl border border-border bg-card p-6">
+        <h2 className="text-2xs font-medium text-muted-foreground">
           Funnel by type
         </h2>
         {TYPES.map((type) => {
@@ -119,13 +130,13 @@ export default async function AnalyticsPage() {
               {FUNNEL_STAGES.map((stage) => {
                 const count = byType[stage] ?? 0;
                 return (
-                  <div key={stage} className="flex items-center gap-2 text-xs">
-                    <span className="w-24 shrink-0 text-zinc-500">
+                  <div key={stage} className="flex items-center gap-2 text-2xs">
+                    <span className="w-24 shrink-0 text-muted-foreground">
                       {stage}
                     </span>
-                    <div className="h-3 flex-1 rounded bg-black/[.04] dark:bg-white/[.06]">
+                    <div className="h-3 flex-1 rounded-chip bg-black/[.04]">
                       <div
-                        className="h-3 rounded bg-blue-600"
+                        className={`h-3 rounded-chip ${STAGE_BAR_CLASS[stage]}`}
                         style={{ width: `${(count / max) * 100}%` }}
                       />
                     </div>
@@ -138,11 +149,11 @@ export default async function AnalyticsPage() {
         })}
       </section>
 
-      <section className="flex flex-col gap-3 rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]">
-        <h2 className="text-sm font-semibold text-zinc-500">
+      <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-6">
+        <h2 className="text-2xs font-medium text-muted-foreground">
           Hacker scores — raw vs. normalized
         </h2>
-        <p className="text-xs text-zinc-500">
+        <p className="text-2xs text-muted-foreground">
           Normalized avg corrects each reviewer&apos;s scores against their
           own mean/stddev (z-score), so a harsh reviewer&apos;s 6/10 and a
           lenient reviewer&apos;s 6/10 aren&apos;t treated as equal. Shows
@@ -151,28 +162,33 @@ export default async function AnalyticsPage() {
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-black/[.02] dark:bg-white/[.03]">
+            <thead className="bg-black/[.02]">
               <tr>
-                <th className="px-3 py-2 font-medium">Applicant</th>
-                <th className="px-3 py-2 font-medium">Raw avg</th>
-                <th className="px-3 py-2 font-medium">Normalized avg</th>
-                <th className="px-3 py-2 font-medium">Reviews outstanding</th>
+                <th className="px-3 py-2.5 text-2xs font-medium text-muted-foreground">
+                  Applicant
+                </th>
+                <th className="px-3 py-2.5 text-2xs font-medium text-muted-foreground">
+                  Raw avg
+                </th>
+                <th className="px-3 py-2.5 text-2xs font-medium text-muted-foreground">
+                  Normalized avg
+                </th>
+                <th className="px-3 py-2.5 text-2xs font-medium text-muted-foreground">
+                  Reviews outstanding
+                </th>
               </tr>
             </thead>
             <tbody>
               {scoreRows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-3 py-6 text-center text-zinc-500">
+                  <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
                     No hacker reviews yet.
                   </td>
                 </tr>
               )}
               {scoreRows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-t border-black/[.08] dark:border-white/[.145]"
-                >
-                  <td className="px-3 py-2">
+                <tr key={row.id} className="border-t border-border">
+                  <td className="px-3 py-2.5">
                     <Link
                       href={`/organizer/applications/${row.id}`}
                       className="font-medium underline-offset-2 hover:underline"
@@ -180,13 +196,13 @@ export default async function AnalyticsPage() {
                       {row.name}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2.5">
                     {row.rawAvg !== null ? row.rawAvg.toFixed(1) : "—"}
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2.5 font-display font-semibold text-sunset">
                     {row.zAvg !== null ? row.zAvg.toFixed(2) : "—"}
                   </td>
-                  <td className="px-3 py-2">{row.outstanding}</td>
+                  <td className="px-3 py-2.5">{row.outstanding}</td>
                 </tr>
               ))}
             </tbody>

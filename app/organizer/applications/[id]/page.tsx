@@ -114,10 +114,10 @@ export default async function ApplicationDetailPage({
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold">
+          <h1 className="font-display text-h2 font-semibold">
             {application.applicant?.full_name || application.applicant?.email}
           </h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             {config.label} application
             {application.submitted_at &&
               ` · submitted ${new Date(application.submitted_at).toLocaleDateString()}`}
@@ -131,16 +131,18 @@ export default async function ApplicationDetailPage({
         currentStatus={application.status}
       />
 
-      <div className="rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-500">
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
           Responses
         </h2>
-        <dl className="flex flex-col gap-3">
+        <dl className="flex flex-col gap-4">
           {config.fields
             .filter((field) => field.type !== "file")
             .map((field) => (
               <div key={field.name}>
-                <dt className="text-xs text-zinc-500">{field.label}</dt>
+                <dt className="text-2xs text-muted-foreground">
+                  {field.label}
+                </dt>
                 <dd className="whitespace-pre-wrap text-sm">
                   {String(formData[field.name] ?? "—")}
                 </dd>
@@ -153,7 +155,7 @@ export default async function ApplicationDetailPage({
             href={resumeUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-block text-sm font-medium underline"
+            className="mt-4 inline-block text-sm font-medium text-sunset underline"
           >
             View resume
           </a>
@@ -165,16 +167,18 @@ export default async function ApplicationDetailPage({
       )}
 
       {application.type === "hacker" && (
-        <div className="rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]">
-          <h2 className="mb-3 text-sm font-semibold text-zinc-500">
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
             Reviews
           </h2>
           <ReviewsList reviews={allReviews} />
         </div>
       )}
 
-      <div className="rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-500">History</h2>
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
+          History
+        </h2>
         <StatusTimeline history={history ?? []} />
       </div>
     </div>

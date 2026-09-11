@@ -34,9 +34,9 @@ export default async function OrganizerLayout({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 p-6">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <OrganizerNav />
-      {children}
+      <div className="mx-auto w-full max-w-5xl flex-1 p-6">{children}</div>
     </div>
   );
 }

@@ -5,10 +5,21 @@ import { Button } from "@/components/ui/button";
 import { decideApplication } from "@/app/organizer/applications/actions";
 import type { ApplicationStatus } from "@/types";
 
-const OPTIONS: { status: ApplicationStatus; label: string }[] = [
-  { status: "accepted", label: "Accept" },
-  { status: "waitlisted", label: "Waitlist" },
-  { status: "rejected", label: "Reject" },
+// Active state reflects the outcome's own status color (mint/amber/brick —
+// same mapping as StatusBadge) rather than the generic sunset accent, so
+// the decision reads consistently with the badge already shown above it.
+const OPTIONS: {
+  status: ApplicationStatus;
+  label: string;
+  activeClass: string;
+}[] = [
+  { status: "accepted", label: "Accept", activeClass: "bg-mint text-white" },
+  {
+    status: "waitlisted",
+    label: "Waitlist",
+    activeClass: "bg-amber text-white",
+  },
+  { status: "rejected", label: "Reject", activeClass: "bg-brick text-white" },
 ];
 
 export function DecisionButtons({
@@ -35,21 +46,23 @@ export function DecisionButtons({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
-        {OPTIONS.map((opt) => (
-          <Button
-            key={opt.status}
-            type="button"
-            variant={currentStatus === opt.status ? "default" : "outline"}
-            disabled={isPending}
-            onClick={() => decide(opt.status)}
-          >
-            {opt.label}
-          </Button>
-        ))}
+        {OPTIONS.map((opt) => {
+          const active = currentStatus === opt.status;
+          return (
+            <Button
+              key={opt.status}
+              type="button"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => decide(opt.status)}
+              className={active ? `border-transparent ${opt.activeClass}` : ""}
+            >
+              {opt.label}
+            </Button>
+          );
+        })}
       </div>
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-brick">{error}</p>}
     </div>
   );
 }
