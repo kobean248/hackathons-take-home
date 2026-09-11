@@ -9,6 +9,15 @@ export type ApplicationStatus =
   | "waitlisted"
   | "rejected";
 
+export const APPLICATION_STATUSES: ApplicationStatus[] = [
+  "draft",
+  "submitted",
+  "under_review",
+  "accepted",
+  "waitlisted",
+  "rejected",
+];
+
 export type AppRole = "applicant" | "reviewer" | "organizer";
 
 export type ApplicationRow = {
