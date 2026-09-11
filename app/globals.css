@@ -145,3 +145,74 @@
     @apply font-display;
   }
 }
+
+/* Sole deliberate motion motifs (design-doc.md §8): paper-plane flights
+   and countdown digit flips. Disabled under prefers-reduced-motion. */
+@keyframes plane-fly {
+  from {
+    left: 0;
+    opacity: 0.85;
+  }
+  to {
+    left: calc(100% - 2rem);
+    opacity: 1;
+  }
+}
+
+@keyframes plane-cross {
+  from {
+    transform: translateX(-120%) translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%) translateY(-6px);
+    opacity: 0.9;
+  }
+}
+
+@keyframes digit-flip {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  45% {
+    opacity: 0;
+    transform: translateY(-0.35em);
+  }
+  55% {
+    opacity: 0;
+    transform: translateY(0.35em);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes plane-fly {
+    from,
+    to {
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      opacity: 1;
+    }
+  }
+  @keyframes plane-cross {
+    from,
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+  @keyframes digit-flip {
+    from,
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
