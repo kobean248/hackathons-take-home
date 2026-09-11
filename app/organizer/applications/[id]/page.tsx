@@ -1,9 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTypes";
 import { StatusBadge } from "@/components/apply/status-badge";
 import { StatusTimeline } from "@/components/apply/status-timeline";
 import { DecisionButtons } from "@/components/organizer/decision-buttons";
+import { GradingPanel } from "@/components/organizer/grading-panel";
+import { ReviewsList } from "@/components/organizer/reviews-list";
 import type { ApplicationStatus, ApplicationStatusHistoryRow } from "@/types";
 
 type ApplicationDetail = {
@@ -16,6 +18,17 @@ type ApplicationDetail = {
   applicant: { full_name: string | null; email: string } | null;
 };
 
+type Scores = { technical: number; creativity: number; impact: number };
+
+type ReviewRow = {
+  id: string;
+  reviewer_id: string;
+  scores: Scores;
+  raw_total: number;
+  comments: string | null;
+  reviewer: { full_name: string | null; email: string } | null;
+};
+
 export default async function ApplicationDetailPage({
   params,
 }: {
@@ -23,6 +36,19 @@ export default async function ApplicationDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: viewerProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
   const { data: application } = await supabase
     .from("applications")
@@ -54,6 +80,35 @@ export default async function ApplicationDetailPage({
     .eq("application_id", id)
     .order("changed_at", { ascending: true })
     .returns<ApplicationStatusHistoryRow[]>();
+
+  const canGrade =
+    application.type === "hacker" &&
+    (viewerProfile?.role === "organizer" || viewerProfile?.role === "reviewer");
+
+  let myReview: { scores: Scores; comments: string | null } | null = null;
+  let allReviews: ReviewRow[] = [];
+
+  if (application.type === "hacker") {
+    const [{ data: mine }, { data: reviews }] = await Promise.all([
+      supabase
+        .from("reviews")
+        .select("scores, comments")
+        .eq("application_id", id)
+        .eq("reviewer_id", user.id)
+        .returns<{ scores: Scores; comments: string | null }[]>()
+        .maybeSingle(),
+      supabase
+        .from("reviews")
+        .select(
+          "id, reviewer_id, scores, raw_total, comments, reviewer:profiles!reviews_reviewer_id_fkey(full_name, email)"
+        )
+        .eq("application_id", id)
+        .order("submitted_at", { ascending: true })
+        .returns<ReviewRow[]>(),
+    ]);
+    myReview = mine ?? null;
+    allReviews = reviews ?? [];
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -104,6 +159,19 @@ export default async function ApplicationDetailPage({
           </a>
         )}
       </div>
+
+      {canGrade && (
+        <GradingPanel applicationId={application.id} existing={myReview} />
+      )}
+
+      {application.type === "hacker" && (
+        <div className="rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]">
+          <h2 className="mb-3 text-sm font-semibold text-zinc-500">
+            Reviews
+          </h2>
+          <ReviewsList reviews={allReviews} />
+        </div>
+      )}
 
       <div className="rounded-xl border border-black/[.08] p-4 dark:border-white/[.145]">
         <h2 className="mb-3 text-sm font-semibold text-zinc-500">History</h2>

@@ -61,3 +61,36 @@ export async function decideApplication(
   revalidatePath(`/organizer/applications/${applicationId}`);
   revalidatePath("/organizer/applications");
 }
+
+export async function submitReview(
+  applicationId: string,
+  scores: { technical: number; creativity: number; impact: number },
+  comments: string
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Upsert on (application_id, reviewer_id): first submission inserts,
+  // resubmitting from the same reviewer edits in place.
+  const { error } = await supabase.from("reviews").upsert(
+    {
+      application_id: applicationId,
+      reviewer_id: user.id,
+      scores,
+      comments,
+    },
+    { onConflict: "application_id,reviewer_id" }
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/organizer/applications/${applicationId}`);
+}
