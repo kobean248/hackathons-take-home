@@ -3,9 +3,13 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { decideApplication } from "@/app/organizer/applications/actions";
+import { useToast } from "@/components/shell/toast-provider";
 import type { ApplicationStatus } from "@/types";
 import { wouldExceedCapacity } from "@/lib/organizer-ops";
 
+// Active state reflects the outcome's own status color (mint/amber/brick —
+// same mapping as StatusBadge) rather than the generic sunset accent, so
+// the decision reads consistently with the badge already shown above it.
 const OPTIONS: {
   status: ApplicationStatus;
   label: string;
@@ -36,6 +40,7 @@ export function DecisionButtons({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [capacityWarning, setCapacityWarning] = useState<string | null>(null);
+  const { push } = useToast();
 
   function decide(status: ApplicationStatus, force = false) {
     setError(null);
@@ -60,8 +65,13 @@ export function DecisionButtons({
     startTransition(async () => {
       try {
         await decideApplication(applicationId, status);
+        const opt = OPTIONS.find((o) => o.status === status);
+        push("success", `Application ${opt?.label.toLowerCase()}ed.`);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Something went wrong.");
+        const message =
+          e instanceof Error ? e.message : "Something went wrong.";
+        setError(message);
+        push("error", message);
       }
     });
   }

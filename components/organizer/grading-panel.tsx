@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { submitReview } from "@/app/organizer/applications/actions";
+import { useToast } from "@/components/shell/toast-provider";
 
 type Scores = { technical: number; creativity: number; impact: number };
 
@@ -27,6 +28,7 @@ export function GradingPanel({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const { push } = useToast();
 
   const total = scores.technical + scores.creativity + scores.impact;
 
@@ -38,10 +40,12 @@ export function GradingPanel({
       try {
         await submitReview(applicationId, scores, comments);
         setSaved(true);
+        push("success", `Review saved — ${total}/30.`);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Something went wrong."
-        );
+        const message =
+          err instanceof Error ? err.message : "Something went wrong.";
+        setError(message);
+        push("error", message);
       }
     });
   }

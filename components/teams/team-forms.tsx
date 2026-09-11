@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/shell/toast-provider";
 import {
   createTeamAction,
   joinTeamAction,
@@ -15,8 +16,25 @@ import {
 
 const initial: TeamActionState = {};
 
+// Fires a toast whenever an action's returned state settles into an
+// ok/error result — a `useActionState` result object is a new reference
+// each time an action completes, so this only fires on real transitions,
+// not every render.
+function useActionToast(state: TeamActionState, successMessage: string) {
+  const { push } = useToast();
+  const seen = useRef<TeamActionState | null>(null);
+
+  useEffect(() => {
+    if (state === seen.current) return;
+    seen.current = state;
+    if (state.error) push("error", state.error);
+    else if (state.ok) push("success", successMessage);
+  }, [state, successMessage, push]);
+}
+
 export function CreateTeamForm() {
   const [state, action, pending] = useActionState(createTeamAction, initial);
+  useActionToast(state, "Team created.");
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -70,6 +88,7 @@ export function CreateTeamForm() {
 
 export function JoinTeamForm() {
   const [state, action, pending] = useActionState(joinTeamAction, initial);
+  useActionToast(state, "Joined the team.");
 
   return (
     <form action={action} className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -117,6 +136,7 @@ export function ListingForm({
   initialSkills?: string;
 }) {
   const [state, action, pending] = useActionState(upsertListingAction, initial);
+  useActionToast(state, "Posted to the board.");
 
   return (
     <form action={action} className="flex flex-col gap-3">

@@ -5,6 +5,8 @@ import {
   Bricolage_Grotesque,
 } from "next/font/google";
 import { Footer } from "@/components/footer";
+import { AmbientBackground } from "@/components/shell/ambient-background";
+import { ToastProvider } from "@/components/shell/toast-provider";
 import "./globals.css";
 
 // Characterful display face for hero headlines / section titles —
@@ -39,8 +41,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bricolage.variable} ${spaceGrotesk.variable} ${ibmPlexSans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <div className="flex-1">{children}</div>
-        <Footer />
+        <AmbientBackground />
+        <ToastProvider>
+          <div className="relative z-10 flex flex-1 flex-col">
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
+        </ToastProvider>
       </body>
     </html>
   );

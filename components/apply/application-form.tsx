@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DeadlineChip } from "@/components/deadline-chip";
 import { PlaneMark } from "@/components/illustrations";
+import { useToast } from "@/components/shell/toast-provider";
 import { createClient } from "@/lib/supabase/client";
 import {
   APPLICATION_TYPES,
@@ -27,6 +28,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
   type FormValues = z.infer<typeof schema>;
 
   const router = useRouter();
+  const { push } = useToast();
   const [formError, setFormError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
@@ -113,6 +115,12 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
     };
   }, [submitPhase, router]);
 
+  function fail(message: string) {
+    setFormError(message);
+    push("error", message);
+    return false;
+  }
+
   async function persist(
     values: FormValues,
     status: "draft" | "submitted"
@@ -125,8 +133,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setFormError("You must be signed in.");
-      return false;
+      return fail("You must be signed in.");
     }
 
     // The only file field today is "resume", which has a dedicated
@@ -148,12 +155,11 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
         const missingBucket =
           /bucket not found/i.test(uploadError.message) ||
           uploadError.message.toLowerCase().includes("not found");
-        setFormError(
+        return fail(
           missingBucket
             ? "Resume storage isn't set up yet (missing `resumes` bucket). Submit without a resume for now, or ask an organizer to run supabase/migrations/0002_resumes_bucket.sql."
             : uploadError.message
         );
-        return false;
       }
       resumePath = path;
     }
@@ -177,8 +183,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
       .single();
 
     if (error) {
-      setFormError(error.message);
-      return false;
+      return fail(error.message);
     }
 
     if (status === "submitted" && application) {
@@ -190,8 +195,7 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
           changed_by: user.id,
         });
       if (historyError) {
-        setFormError(historyError.message);
-        return false;
+        return fail(historyError.message);
       }
     }
 
@@ -202,7 +206,10 @@ export function ApplicationForm({ type }: { type: ApplicationTypeKey }) {
   // allowed to be incomplete. getValues() reads whatever's in the form as-is.
   async function onSaveDraft() {
     const ok = await persist(getValues(), "draft");
-    if (ok) setSavedAt(new Date());
+    if (ok) {
+      setSavedAt(new Date());
+      push("success", "Draft saved.");
+    }
   }
 
   const onSubmitForm = handleSubmit(async (values) => {

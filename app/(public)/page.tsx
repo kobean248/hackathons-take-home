@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Countdown } from "@/components/countdown/countdown";
 import { HeroParallax } from "@/components/shell/hero-parallax";
+import { CountUp } from "@/components/count-up";
 import { createClient } from "@/lib/supabase/server";
 import { homePathForRole } from "@/lib/home-path";
 import type { AppRole } from "@/types";
@@ -82,19 +83,19 @@ export default async function Home() {
               <div>
                 <dt className="text-2xs text-white/45">Applications</dt>
                 <dd className="font-hero text-h2 font-bold tabular-nums text-paper">
-                  {stats.applications.toLocaleString()}
+                  <CountUp value={stats.applications} />
                 </dd>
               </div>
               <div>
                 <dt className="text-2xs text-white/45">Schools</dt>
                 <dd className="font-hero text-h2 font-bold tabular-nums text-sky">
-                  {stats.schools.toLocaleString()}
+                  <CountUp value={stats.schools} />
                 </dd>
               </div>
               <div>
                 <dt className="text-2xs text-white/45">Accepted</dt>
                 <dd className="font-hero text-h2 font-bold tabular-nums text-cal-gold">
-                  {stats.accepted.toLocaleString()}
+                  <CountUp value={stats.accepted} />
                 </dd>
               </div>
             </dl>
