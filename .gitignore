@@ -12,7 +12,7 @@
 
 # testing
 /coverage
-
+dev_plan.md
 # next.js
 /.next/
 /out/
