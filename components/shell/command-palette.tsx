@@ -231,9 +231,7 @@ export function buildApplicantCommands(opts: {
     { id: "apply", label: "Apply", href: "/apply", group: "Portal" },
     { id: "teams", label: "Teams", href: "/teams", group: "Portal" },
     { id: "settings", label: "Settings", href: "/settings", group: "Portal" },
-    { id: "home", label: "Marketing site", href: "/", group: "Browse" },
-    { id: "about", label: "About", href: "/about", group: "Browse" },
-    { id: "faq", label: "FAQ", href: "/faq", group: "Browse" },
+    { id: "home", label: "Home", href: "/", group: "Browse" },
   ];
   if (opts.showConsole) {
     items.splice(4, 0, {

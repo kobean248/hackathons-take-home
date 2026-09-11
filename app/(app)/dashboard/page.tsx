@@ -50,33 +50,55 @@ function firstNameFrom(
 function statusHeadline(
   apps: ApplicationRow[],
   roleLabel: string | null
-): string {
+): { title: string; detail: string | null } {
   if (apps.length === 0) {
-    return roleLabel
-      ? `You're signed in as a ${roleLabel}`
-      : "You're signed in";
+    return {
+      title: "You're signed in",
+      detail: roleLabel ? `Signed in as a ${roleLabel}` : null,
+    };
   }
   if (apps.length === 1) {
     const app = apps[0]!;
     const typeLabel = APPLICATION_TYPES[app.type].label;
     switch (app.status) {
       case "draft":
-        return `Your ${typeLabel} application is a draft`;
+        return {
+          title: "Draft in progress",
+          detail: `${typeLabel} application — finish when you're ready`,
+        };
       case "submitted":
-        return `Your ${typeLabel} application is submitted`;
+        return {
+          title: "Application submitted",
+          detail: `${typeLabel} — waiting for review`,
+        };
       case "under_review":
-        return `Your ${typeLabel} application is under review`;
+        return {
+          title: "Under review",
+          detail: `${typeLabel} — reviewers are scoring now`,
+        };
       case "accepted":
-        return `You're accepted as a ${typeLabel}`;
+        return {
+          title: "You're in",
+          detail: `Accepted as a ${typeLabel}`,
+        };
       case "waitlisted":
-        return `You're waitlisted as a ${typeLabel}`;
+        return {
+          title: "Waitlisted",
+          detail: `${typeLabel} — hang tight for updates`,
+        };
       case "rejected":
-        return `Your ${typeLabel} application wasn't accepted`;
+        return {
+          title: "Not accepted this round",
+          detail: `Your ${typeLabel} application`,
+        };
       default:
-        return `Your ${typeLabel} application`;
+        return { title: `${typeLabel} application`, detail: null };
     }
   }
-  return `You have ${apps.length} applications in progress`;
+  return {
+    title: `${apps.length} applications`,
+    detail: "Track each one below",
+  };
 }
 
 function StageBear({
@@ -198,6 +220,7 @@ export default async function DashboardPage({
 
   const draftCount = apps.filter((a) => a.status === "draft").length;
   const daysUntilDeadline = daysUntil(PRIORITY_DEADLINE);
+  const headline = statusHeadline(apps, roleLabel);
 
   return (
     <main className="flex flex-col gap-6">
@@ -225,12 +248,13 @@ export default async function DashboardPage({
 
       <PortalHero
         eyebrow={`Welcome, ${firstName}`}
-        title={statusHeadline(apps, roleLabel)}
-        scene={<CampanileTower className="h-full w-auto max-w-none" />}
+        title={headline.title}
+        description={headline.detail}
+        scene={<CampanileTower className="h-full w-auto max-w-none opacity-90" />}
         seal={
           <>
-            <BearWaving className="pointer-events-none absolute right-6 top-6 z-[1] w-28 opacity-95 sm:right-10 sm:top-8 sm:w-36" />
-            <CatalogSeal className="pointer-events-none absolute bottom-3 right-3 z-[1] w-14 opacity-60 sm:bottom-4 sm:right-6" />
+            <BearWaving className="pointer-events-none absolute right-6 top-6 z-0 w-24 opacity-70 sm:right-10 sm:top-8 sm:w-32 max-md:hidden" />
+            <CatalogSeal className="pointer-events-none absolute bottom-3 right-3 z-0 w-12 opacity-45 sm:bottom-4 sm:right-6 max-md:hidden" />
           </>
         }
       >

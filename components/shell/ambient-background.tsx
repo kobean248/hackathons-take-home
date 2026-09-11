@@ -3,14 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-const FULL_INTENSITY_ROUTES = new Set([
-  "/",
-  "/about",
-  "/faq",
-  "/schedule",
-  "/sponsors",
-  "/tracks",
-]);
+const FULL_INTENSITY_ROUTES = new Set(["/", "/login", "/signup"]);
 
 /**
  * Single root ambient layer: drifting color mesh + grain.

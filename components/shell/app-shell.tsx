@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/shell/app-nav";
 import { AnimatedPage } from "@/components/motion/animated-page";
+import { PortalSideDecor } from "@/components/shell/portal-side-decor";
 import type { AppRole } from "@/types";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
@@ -24,10 +25,13 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper/90">
+    <div className="relative flex min-h-screen flex-col bg-paper/90">
       <AppNav email={email} fullName={fullName} role={role} />
-      <div className="mx-auto w-full max-w-[960px] flex-1 px-6 py-8">
-        <AnimatedPage>{children}</AnimatedPage>
+      <div className="relative flex-1">
+        <PortalSideDecor />
+        <div className="relative z-10 mx-auto w-full max-w-[960px] px-6 py-8">
+          <AnimatedPage>{children}</AnimatedPage>
+        </div>
       </div>
     </div>
   );

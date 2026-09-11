@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="6" fill="#003262"/>
+  <g transform="translate(9.5 2)">
+    <path d="M6.5 0.5 3 6h3.5Z" fill="#F6F4EE"/>
+    <path d="M6.5 0.5 10 6H6.5Z" fill="#2A3358"/>
+    <rect x="5.7" y="0" width="1.6" height="1.4" rx="0.3" fill="#FDB515"/>
+    <path d="M2.2 6h4.3v3.2H2.2Z" fill="#F6F4EE"/>
+    <path d="M6.5 6h4.3v3.2H6.5Z" fill="#2A3358"/>
+    <rect x="3.2" y="7" width="2.2" height="1.6" fill="#0A0E1F"/>
+    <rect x="7.6" y="7" width="2.2" height="1.6" fill="#0A0E1F"/>
+    <path d="M1.8 9.2h4.7v5H1.8Z" fill="#F6F4EE"/>
+    <path d="M6.5 9.2h4.7v5H6.5Z" fill="#2A3358"/>
+    <path d="M3 13.4v-2.6a1.2 1.2 0 0 1 2.4 0v2.6Z" fill="#0A0E1F"/>
+    <path d="M7.8 13.4v-2.6a1.1 1.1 0 0 1 2.2 0v2.6Z" fill="#0A0E1F"/>
+    <path d="M3.2 14.2 3.9 27h2.6V14.2Z" fill="#F6F4EE"/>
+    <path d="M6.5 14.2h2.6l.7 12.8H6.5Z" fill="#2A3358"/>
+    <rect x="5.4" y="17.2" width="1" height="2.2" rx="0.2" fill="#0A0E1F" opacity="0.7"/>
+    <rect x="6.7" y="17.2" width="0.9" height="2.2" rx="0.2" fill="#0A0E1F" opacity="0.85"/>
+    <rect x="5.4" y="21.2" width="1" height="2.2" rx="0.2" fill="#0A0E1F" opacity="0.7"/>
+    <rect x="6.7" y="21.2" width="0.9" height="2.2" rx="0.2" fill="#0A0E1F" opacity="0.85"/>
+    <path d="M2.4 27h4.1v1.6H2.4Z" fill="#F6F4EE"/>
+    <path d="M6.5 27h4.1v1.6H6.5Z" fill="#2A3358"/>
+    <rect x="1.8" y="28.6" width="9.4" height="1" fill="#FDB515"/>
+  </g>
+</svg>

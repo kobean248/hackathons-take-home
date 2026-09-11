@@ -3,61 +3,112 @@ import type { SVGProps } from "react";
 type SceneProps = SVGProps<SVGSVGElement> & { className?: string };
 
 /**
- * Sather Tower, drawn as a real illustration rather than primitive boxes:
- * tapered shaft, arched belfry openings, a clock face with hands, a small
- * arched window below the spire, and a pyramidal cap. Local coordinate
- * space is 80x480 (1:6 width:height, matching the real tower's proportions)
- * so it can be dropped into any scene via a `<g transform="translate(x y)
- * scale(s)">` wrapper, or rendered standalone through `<CampanileTower/>`.
+ * Sather Tower (Campanile) — Berkeley Times–style flat two-tone vector.
+ * Light left face / shadowed right face, pyramidal spire, observation
+ * gallery with corner pinnacles, three arched belfry openings, recessed
+ * shaft with slit windows. viewBox 80×500 (~1:6.25, real proportions).
  */
 function CampanileGlyph() {
+  const light = "var(--color-paper)";
+  const shadow = "var(--color-berkeley)";
+  const deep = "var(--color-navy-950)";
+  const accent = "var(--color-cal-gold)";
+
   return (
-    <>
-      {/* Base plinth */}
-      <rect x="8" y="452" width="64" height="20" fill="var(--color-cal-gold)" />
-      <rect x="2" y="472" width="76" height="8" fill="var(--color-berkeley)" opacity={0.85} />
+    <g>
+      {/* —— Spire —— */}
+      <path d="M40 6 22 58h18Z" fill={light} />
+      <path d="M40 6 58 58H40Z" fill={shadow} />
+      {/* Finial */}
+      <rect x="38.5" y="0" width="3" height="8" rx="0.5" fill={accent} />
+      <rect x="37" y="6" width="6" height="2.5" rx="0.5" fill={accent} />
 
-      {/* Shaft — tapered trapezoid, narrower at the top */}
-      <path d="M14 452 20 140h40l6 312H14Z" fill="var(--color-cal-gold)" />
-      <path d="M14 452 20 140h10l-2 312H14Z" fill="var(--color-berkeley)" opacity={0.1} />
-      <path d="M40 452 42 140" stroke="var(--color-berkeley)" strokeWidth={1} opacity={0.18} />
+      {/* —— Observation deck / gallery —— */}
+      <path d="M18 58h22v28H18Z" fill={light} />
+      <path d="M40 58h22v28H40Z" fill={shadow} />
+      {/* Corner pinnacles */}
+      <path d="M18 58 21 50l3 8Z" fill={light} />
+      <path d="M56 58 59 50l3 8Z" fill={shadow} />
+      <path d="M37 58 40 51l3 7Z" fill={accent} opacity={0.85} />
+      {/* Dark gallery band */}
+      <rect x="22" y="68" width="16" height="10" fill={deep} />
+      <rect x="42" y="68" width="16" height="10" fill={deep} opacity={0.85} />
+      {/* Gallery pillars (light face) */}
+      <rect x="22" y="68" width="2.5" height="10" fill={light} opacity={0.55} />
+      <rect x="35.5" y="68" width="2.5" height="10" fill={light} opacity={0.55} />
 
-      {/* Belfry — arched window openings */}
-      <rect x="16" y="96" width="48" height="44" rx="2" fill="var(--color-cal-gold)" />
-      <rect x="16" y="90" width="48" height="6" fill="var(--color-berkeley)" opacity={0.5} />
-      <g fill="var(--color-berkeley)" opacity={0.92}>
-        <path d="M23 132v-14a4 4 0 0 1 8 0v14Z" />
-        <path d="M36 132v-14a4 4 0 0 1 8 0v14Z" />
-        <path d="M49 132v-14a4 4 0 0 1 8 0v14Z" />
-      </g>
+      {/* —— Belfry with three tall arches —— */}
+      <path d="M16 86h24v52H16Z" fill={light} />
+      <path d="M40 86h24v52H40Z" fill={shadow} />
+      {/* Arch recesses — left face */}
+      <path d="M20 132v-28a5 5 0 0 1 10 0v28Z" fill={deep} />
+      <path d="M32.5 132v-24a4 4 0 0 1 6 0v24Z" fill={deep} opacity={0.9} />
+      {/* Arch recesses — right face (foreshortened) */}
+      <path d="M44 132v-28a5 5 0 0 1 8 0v28Z" fill={deep} />
+      <path d="M54 132v-24a4 4 0 0 1 6 0v24Z" fill={deep} opacity={0.85} />
+      {/* Belfry cornice */}
+      <rect x="14" y="86" width="52" height="4" fill={accent} opacity={0.7} />
+      <rect x="14" y="134" width="52" height="4" fill={deep} opacity={0.45} />
 
-      {/* Clock band, with actual hands */}
-      <rect x="12" y="46" width="56" height="50" rx="2" fill="var(--color-cal-gold)" />
-      <circle cx="40" cy="71" r="18" fill="var(--color-paper)" />
-      <circle cx="40" cy="71" r="18" fill="none" stroke="var(--color-navy-950)" strokeWidth={1.4} opacity={0.3} />
-      <g stroke="var(--color-navy-950)" strokeWidth={1.2} opacity={0.4} strokeLinecap="round">
-        <path d="M40 56v4M40 82v4M25 71h4M51 71h4" />
-      </g>
-      <path d="M40 71 40 60" stroke="var(--color-navy-950)" strokeWidth={2} strokeLinecap="round" />
-      <path d="M40 71 49 75" stroke="var(--color-navy-950)" strokeWidth={2} strokeLinecap="round" />
-      <circle cx="40" cy="71" r="2" fill="var(--color-sunset)" />
+      {/* —— Clock / chevron band (BT mark) —— */}
+      <path d="M18 138h22v28H18Z" fill={light} />
+      <path d="M40 138h22v28H40Z" fill={shadow} />
+      {/* Subtle clock face on light side */}
+      <circle cx="29" cy="152" r="9" fill={light} />
+      <circle
+        cx="29"
+        cy="152"
+        r="9"
+        fill="none"
+        stroke={deep}
+        strokeWidth={1.2}
+        opacity={0.35}
+      />
+      <path
+        d="M29 152 29 145M29 152 34.5 155"
+        stroke={deep}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+        opacity={0.55}
+      />
+      <circle cx="29" cy="152" r="1.3" fill={accent} />
+      {/* BT-style chevrons on shadow face */}
+      <path
+        d="M48 148h10M50 152h8M52 156h6"
+        stroke={deep}
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        opacity={0.4}
+      />
 
-      {/* Small arched window just below the spire */}
-      <path d="M34 40v-10a6 6 0 0 1 12 0v10Z" fill="var(--color-berkeley)" opacity={0.85} />
+      {/* —— Main shaft (tapers slightly) —— */}
+      <path d="M20 166 24 470h16V166Z" fill={light} />
+      <path d="M40 166h16l4 304H40Z" fill={shadow} />
+      {/* Recessed center panel */}
+      <path d="M32 175h8v280H32Z" fill={deep} opacity={0.12} />
+      <path d="M40 175h8v280H40Z" fill={deep} opacity={0.22} />
+      {/* Slit windows */}
+      <rect x="35" y="210" width="4" height="22" rx="1" fill={deep} opacity={0.55} />
+      <rect x="41" y="210" width="3.5" height="22" rx="1" fill={deep} opacity={0.7} />
+      <rect x="35" y="290" width="4" height="22" rx="1" fill={deep} opacity={0.55} />
+      <rect x="41" y="290" width="3.5" height="22" rx="1" fill={deep} opacity={0.7} />
+      <rect x="35" y="370" width="4" height="22" rx="1" fill={deep} opacity={0.55} />
+      <rect x="41" y="370" width="3.5" height="22" rx="1" fill={deep} opacity={0.7} />
 
-      {/* Pyramidal spire cap */}
-      <path d="M10 46 40 2l30 44Z" fill="var(--color-cal-gold)" />
-      <path d="M40 2 70 46H40Z" fill="var(--color-berkeley)" opacity={0.16} />
-      <rect x="37" y="0" width="6" height="8" fill="var(--color-cal-gold)" />
-    </>
+      {/* —— Base plinth —— */}
+      <path d="M16 470h24v18H16Z" fill={light} />
+      <path d="M40 470h24v18H40Z" fill={shadow} />
+      <rect x="12" y="488" width="56" height="8" fill={accent} />
+      <rect x="8" y="496" width="64" height="4" fill={deep} opacity={0.85} />
+    </g>
   );
 }
 
-/** Standalone Campanile — deadline chips, empty states, the catalog seal. */
+/** Standalone Campanile — side decor, heroes, seals. */
 export function CampanileTower({ className, ...rest }: SceneProps) {
   return (
     <svg
-      viewBox="0 0 80 480"
+      viewBox="0 0 80 500"
       fill="none"
       className={className}
       aria-hidden
@@ -117,9 +168,8 @@ export function BerkeleySkylineScene({ className, ...rest }: SceneProps) {
       </g>
 
       {/* Campanile — centerpiece. Base lands just above the ground strip
-          (y=400); real tapered/belfry/clock/spire sections via the shared
-          glyph, not primitive boxes. */}
-      <g transform="translate(568 11) scale(0.79)">
+          (y=400); BT-style two-tone tower via shared glyph. */}
+      <g transform="translate(568 8) scale(0.76)">
         <CampanileGlyph />
       </g>
 

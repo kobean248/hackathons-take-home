@@ -154,6 +154,7 @@
   .font-ui {
     font-family: var(--font-ui);
   }
+}
 
 /* Landing-only plane trail on hover of interactive controls */
 .hero-interactive .hero-plane {
@@ -432,6 +433,13 @@
   border: 1px solid color-mix(in oklch, var(--color-line) 70%, transparent);
   backdrop-filter: blur(14px) saturate(1.2);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+/* Working-page heroes — more opaque so Syne headlines stay crisp. */
+.glass-hero {
+  background: color-mix(in oklch, var(--color-surface) 94%, transparent);
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
 }
 .glass-dark {
   background: color-mix(in oklch, var(--color-navy-950) 72%, transparent);

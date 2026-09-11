@@ -215,9 +215,7 @@ tables (own folder only, organizers can read all).
 ## Route map
 
 ```
-/                              marketing landing (public)
-/about, /schedule, /faq,
-/sponsors, /tracks             public marketing pages
+/                              landing (public)
 /login, /signup                auth (email/password + Google)
 
 /dashboard                     applicant: application cards + status timeline
@@ -235,12 +233,12 @@ tables (own folder only, organizers can read all).
 /organizer/analytics           funnel per type + normalized hacker scores
 ```
 
-Public marketing lives under the `(public)` route group with `<PublicNav>`;
+The landing lives under the `(public)` route group with `<PublicNav>`;
 the applicant portal under `(app)` with `<AppNav>`. Organizer keeps its own
 sidebar shell. `/dashboard`, `/apply`, `/teams`, `/settings`, and
 `/organizer/*` are gated in `proxy.ts` (session + role); signed-in users can
-still browse `/` and other public pages — they get a “Go to dashboard”
-banner instead of a force redirect.
+still browse `/` — they get a “Go to dashboard” banner instead of a force
+redirect.
 
 ## Design decisions
 

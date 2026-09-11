@@ -165,12 +165,6 @@ export default async function ApplyPage() {
           </span>
           . Late enrollment is reviewed at organizer discretion.
         </span>
-        <Link
-          href="/faq"
-          className="shrink-0 font-medium text-sunset hover:underline"
-        >
-          Registration FAQ →
-        </Link>
       </div>
       </div>
     </div>
