@@ -18,7 +18,18 @@ export async function GET(request: NextRequest) {
     if (!error) {
       redirect(next);
     }
+
+    console.error("verifyOtp failed:", error.message);
+    redirect(
+      `/auth/auth-code-error?reason=${encodeURIComponent(error.message)}`
+    );
   }
 
-  redirect("/auth/auth-code-error");
+  // Missing token_hash/type entirely — almost always means the email
+  // template is still using {{ .ConfirmationURL }} instead of a custom
+  // link (see README setup step 5), so this request never had them.
+  redirect(
+    "/auth/auth-code-error?reason=" +
+      encodeURIComponent("No token_hash/type on the confirmation link.")
+  );
 }
