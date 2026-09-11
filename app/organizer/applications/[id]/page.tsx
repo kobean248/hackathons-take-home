@@ -6,6 +6,10 @@ import { StatusTimeline } from "@/components/apply/status-timeline";
 import { DecisionButtons } from "@/components/organizer/decision-buttons";
 import { GradingPanel } from "@/components/organizer/grading-panel";
 import { ReviewsList } from "@/components/organizer/reviews-list";
+import { Avatar } from "@/components/avatar";
+import { FlagIcon } from "@/components/icons";
+import { fraudFlagTooltip, type FraudFlagKind } from "@/lib/fraud-flags";
+import { daysSince } from "@/lib/deadlines";
 import type { ApplicationStatus, ApplicationStatusHistoryRow } from "@/types";
 
 type ApplicationDetail = {
@@ -16,6 +20,7 @@ type ApplicationDetail = {
   form_data: Record<string, unknown> | null;
   resume_path: string | null;
   submitted_at: string | null;
+  created_at: string;
   applicant: {
     full_name: string | null;
     email: string;
@@ -61,7 +66,7 @@ export default async function ApplicationDetailPage({
   const { data: application } = await supabase
     .from("applications")
     .select(
-      "id, applicant_id, type, status, form_data, resume_path, submitted_at, applicant:profiles!applications_applicant_id_fkey(full_name, email, school, github_url)"
+      "id, applicant_id, type, status, form_data, resume_path, submitted_at, created_at, applicant:profiles!applications_applicant_id_fkey(full_name, email, school, github_url)"
     )
     .eq("id", id)
     .returns<ApplicationDetail[]>()
@@ -85,6 +90,27 @@ export default async function ApplicationDetailPage({
     .maybeSingle();
   const teamRaw = membership?.teams;
   const team: TeamInfo = Array.isArray(teamRaw) ? (teamRaw[0] ?? null) : (teamRaw ?? null);
+
+  const applicantName =
+    application.applicant?.full_name || application.applicant?.email || "?";
+
+  const ageSource = application.submitted_at ?? application.created_at;
+  const daysAgo = ageSource ? daysSince(ageSource) : null;
+
+  let flagKinds: FraudFlagKind[] = [];
+  if (viewerProfile?.role === "organizer") {
+    const { data: flagRows } = await supabase
+      .from("application_fraud_flags")
+      .select("flag_kind")
+      .eq("application_id", id)
+      .returns<{ flag_kind: string }[]>();
+    flagKinds = (flagRows ?? [])
+      .map((r) => r.flag_kind)
+      .filter(
+        (k): k is FraudFlagKind =>
+          k === "duplicate_name" || k === "identical_answer"
+      );
+  }
 
   const config = APPLICATION_TYPES[application.type];
   const formData = application.form_data ?? {};
@@ -164,15 +190,18 @@ export default async function ApplicationDetailPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-h2 font-semibold">
-            {application.applicant?.full_name || application.applicant?.email}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {config.label} application
-            {application.submitted_at &&
-              ` · submitted ${new Date(application.submitted_at).toLocaleDateString()}`}
-          </p>
+        <div className="flex items-center gap-3">
+          <Avatar id={application.applicant_id} name={applicantName} size="size-11" />
+          <div>
+            <h1 className="font-display text-h2 font-semibold">
+              {applicantName}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {config.label} application
+              {application.submitted_at &&
+                ` · submitted ${new Date(application.submitted_at).toLocaleDateString()}`}
+            </p>
+          </div>
         </div>
         <StatusBadge status={application.status} />
       </div>
@@ -181,7 +210,7 @@ export default async function ApplicationDetailPage({
         <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
           Applicant
         </h2>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <dt className="text-2xs text-muted-foreground">Email</dt>
             <dd className="text-sm">{application.applicant?.email ?? "—"}</dd>
@@ -209,14 +238,19 @@ export default async function ApplicationDetailPage({
               )}
             </dd>
           </div>
-          <div>
+        </dl>
+
+        {/* Secondary/inset tier: paper-tinted, no border, smaller radius —
+            depth without a shadow, per the flat design system. */}
+        <div className="mt-4 grid grid-cols-1 gap-3 border-t border-line pt-4 sm:grid-cols-3">
+          <div className="rounded-lg bg-paper px-3 py-2.5">
             <dt className="text-2xs text-muted-foreground">Team</dt>
-            <dd className="text-sm">
+            <dd className="mt-0.5 text-sm">
               {team ? (
                 <>
                   {team.name}{" "}
                   <span className="text-2xs text-muted-foreground">
-                    (code {team.join_code})
+                    ({team.join_code})
                   </span>
                 </>
               ) : (
@@ -224,7 +258,32 @@ export default async function ApplicationDetailPage({
               )}
             </dd>
           </div>
-        </dl>
+          <div className="rounded-lg bg-paper px-3 py-2.5">
+            <dt className="text-2xs text-muted-foreground">Applied</dt>
+            <dd className="mt-0.5 text-sm">
+              {daysAgo === null
+                ? "Not yet submitted"
+                : daysAgo === 0
+                  ? "Today"
+                  : `${daysAgo}d ago`}
+            </dd>
+          </div>
+          <div className="rounded-lg bg-paper px-3 py-2.5">
+            <dt className="text-2xs text-muted-foreground">Flags</dt>
+            <dd className="mt-0.5 flex items-center gap-1.5 text-sm">
+              {flagKinds.length > 0 ? (
+                <>
+                  <FlagIcon className="size-3.5 text-amber" />
+                  <span title={fraudFlagTooltip(flagKinds)}>
+                    {flagKinds.length} flagged
+                  </span>
+                </>
+              ) : (
+                <span className="text-ink-soft">None</span>
+              )}
+            </dd>
+          </div>
+        </div>
       </div>
 
       <DecisionButtons
@@ -237,15 +296,15 @@ export default async function ApplicationDetailPage({
         <h2 className="mb-4 text-2xs font-medium text-muted-foreground">
           Responses
         </h2>
-        <dl className="flex flex-col gap-4">
+        <dl className="flex flex-col gap-3">
           {config.fields
             .filter((field) => field.type !== "file")
             .map((field) => (
-              <div key={field.name}>
+              <div key={field.name} className="rounded-lg bg-paper px-3 py-2.5">
                 <dt className="text-2xs text-muted-foreground">
                   {field.label}
                 </dt>
-                <dd className="whitespace-pre-wrap text-sm">
+                <dd className="mt-0.5 whitespace-pre-wrap text-sm">
                   {String(formData[field.name] ?? "—")}
                 </dd>
               </div>

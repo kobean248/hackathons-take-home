@@ -5,7 +5,7 @@ import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTyp
 import { StatusBadge } from "@/components/apply/status-badge";
 import { DeadlineChip } from "@/components/deadline-chip";
 import { CatalogSeal } from "@/components/brand/catalog-seal";
-import { GraduationCapIcon, QueueIcon } from "@/components/icons";
+import { CheckIcon, GraduationCapIcon, QueueIcon } from "@/components/icons";
 import { PRIORITY_DEADLINE_LABEL } from "@/lib/deadlines";
 import type { ApplicationStatus } from "@/types";
 
@@ -17,6 +17,7 @@ const COURSE_META: Record<
   {
     code: string;
     units: string;
+    meeting: string;
     instructor: string;
     prereq: string;
     blurb: string;
@@ -25,6 +26,7 @@ const COURSE_META: Record<
   hacker: {
     code: "HACK 189",
     units: "3 units",
+    meeting: "Fri–Sun · Memorial Glade",
     instructor: "MLH / Cal Hacks",
     prereq: "Enthusiasm",
     blurb: "Full application + rubric review. Ship something wild.",
@@ -32,6 +34,7 @@ const COURSE_META: Record<
   mentor: {
     code: "MENT 101",
     units: "1 unit",
+    meeting: "Drop-in · Sat–Sun",
     instructor: "Industry staff",
     prereq: "Experience",
     blurb: "Help teams unstick. Lighter form, organizer decision.",
@@ -39,6 +42,7 @@ const COURSE_META: Record<
   volunteer: {
     code: "VOL 10A",
     units: "P/NP",
+    meeting: "Shifts · TBD",
     instructor: "Ops crew",
     prereq: "None",
     blurb: "Keep the event flying. Short form, accept/reject.",
@@ -81,6 +85,7 @@ export default async function ApplyPage() {
         </div>
       </header>
 
+      <div className="flex flex-col gap-3">
       <div className="grid gap-4 sm:grid-cols-3">
         {TYPES.map((type) => {
           const config = APPLICATION_TYPES[type];
@@ -98,13 +103,18 @@ export default async function ApplyPage() {
               href={`/apply/${type}`}
               className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface hover:border-berkeley/40"
             >
-              <div className="flex items-center justify-between border-b border-line bg-berkeley px-4 py-2.5">
-                <span className="font-ui text-2xs font-semibold tracking-wide text-cal-gold">
-                  {course.code}
-                </span>
-                <span className="font-ui text-2xs text-white/70">
-                  {course.units}
-                </span>
+              <div className="border-b border-line bg-berkeley px-4 py-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-ui text-2xs font-semibold tracking-wide text-cal-gold">
+                    {course.code}
+                  </span>
+                  <span className="font-ui text-2xs text-white/70">
+                    {course.units}
+                  </span>
+                </div>
+                <p className="mt-0.5 font-ui text-2xs text-white/55">
+                  {course.meeting}
+                </p>
               </div>
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div className="flex items-start justify-between gap-2">
@@ -125,8 +135,11 @@ export default async function ApplyPage() {
                     </dt>
                     <dd className="font-medium text-ink">{course.instructor}</dd>
                   </div>
-                  <div className="flex justify-between gap-2">
-                    <dt>Prerequisites</dt>
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="flex items-center gap-1.5">
+                      <CheckIcon className="size-3.5" />
+                      Prerequisites
+                    </dt>
                     <dd className="font-medium text-ink">{course.prereq}</dd>
                   </div>
                 </dl>
@@ -142,7 +155,7 @@ export default async function ApplyPage() {
         })}
       </div>
 
-      <div className="flex flex-col items-start gap-2 rounded-xl border border-line bg-surface px-5 py-4 text-2xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-start gap-2 border-t border-line px-1 pt-3 text-2xs text-ink-soft sm:flex-row sm:items-center sm:justify-between">
         <span className="flex items-center gap-1.5">
           <QueueIcon className="size-3.5 shrink-0" />
           Add/drop deadline: priority round closes{" "}
@@ -157,6 +170,7 @@ export default async function ApplyPage() {
         >
           Registration FAQ →
         </Link>
+      </div>
       </div>
     </div>
   );

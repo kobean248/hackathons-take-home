@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CatalogSeal } from "@/components/brand/catalog-seal";
 
 const STEPS = [
   {
@@ -26,7 +27,14 @@ export function AcceptanceNextSteps({
   typeLabel: string;
 }) {
   return (
-    <div className="rounded-xl border border-mint/35 bg-mint/8 p-4 sm:p-5">
+    <div className="relative overflow-hidden rounded-xl border border-mint/35 bg-mint/8 p-4 sm:p-5">
+      <CatalogSeal
+        topText="APPROVED"
+        bottomText="REGISTRAR"
+        ringColor="var(--color-mint)"
+        glyphColor="var(--color-mint)"
+        className="pointer-events-none absolute -right-2 -top-2 w-16 opacity-80"
+      />
       <p className="font-display text-sm font-semibold text-ink">
         You&apos;re in as a {typeLabel}
       </p>

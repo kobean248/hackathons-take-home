@@ -12,36 +12,56 @@ import {
 import { UserMenu } from "@/components/shell/user-menu";
 import { BracketsIcon } from "@/components/icons";
 
-const NAV = [
+type NavItem = {
+  href: string;
+  label: string;
+  match: "all" | "queue" | "path";
+  icon: typeof ApplicationsIcon;
+  badgeKey?: "total" | "queue";
+};
+
+const SECTIONS: { label: string; items: NavItem[] }[] = [
   {
-    href: "/organizer/applications",
-    label: "Applications",
-    match: "all" as const,
-    icon: ApplicationsIcon,
+    label: "Review",
+    items: [
+      {
+        href: "/organizer/applications",
+        label: "Applications",
+        match: "all",
+        icon: ApplicationsIcon,
+        badgeKey: "total",
+      },
+      {
+        href: "/organizer/applications?assigned_to_me=true",
+        label: "My queue",
+        match: "queue",
+        icon: QueueIcon,
+        badgeKey: "queue",
+      },
+      {
+        href: "/organizer/calibration",
+        label: "Calibration",
+        match: "path",
+        icon: CalibrationIcon,
+      },
+    ],
   },
   {
-    href: "/organizer/applications?assigned_to_me=true",
-    label: "My queue",
-    match: "queue" as const,
-    icon: QueueIcon,
-  },
-  {
-    href: "/organizer/calibration",
-    label: "Calibration",
-    match: "path" as const,
-    icon: CalibrationIcon,
-  },
-  {
-    href: "/organizer/reviewers",
-    label: "Reviewers",
-    match: "path" as const,
-    icon: ReviewersIcon,
-  },
-  {
-    href: "/organizer/analytics",
-    label: "Analytics",
-    match: "path" as const,
-    icon: AnalyticsIcon,
+    label: "Manage",
+    items: [
+      {
+        href: "/organizer/reviewers",
+        label: "Reviewers",
+        match: "path",
+        icon: ReviewersIcon,
+      },
+      {
+        href: "/organizer/analytics",
+        label: "Analytics",
+        match: "path",
+        icon: AnalyticsIcon,
+      },
+    ],
   },
 ];
 
@@ -50,48 +70,80 @@ const NAV = [
 export function OrganizerNav({
   email,
   fullName,
+  totalCount = 0,
+  queueCount = 0,
 }: {
   email: string;
   fullName?: string | null;
+  totalCount?: number;
+  queueCount?: number;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const mine = searchParams.get("assigned_to_me") === "true";
 
+  const badgeValue = (key?: "total" | "queue") =>
+    key === "total" ? totalCount : key === "queue" ? queueCount : undefined;
+
   return (
     <nav className="flex shrink-0 flex-col bg-berkeley text-white md:w-56 md:min-h-screen">
-      <div className="flex items-center gap-2 overflow-x-auto px-4 py-3 md:flex-col md:items-stretch md:gap-1 md:overflow-visible md:px-4 md:py-6">
-        <div className="mb-2 hidden items-center gap-2 px-3 md:flex">
+      <div className="flex items-center gap-2 overflow-x-auto px-4 py-3 md:flex-col md:items-stretch md:gap-4 md:overflow-visible md:px-4 md:py-6">
+        <div className="mb-1 hidden items-center gap-2 px-3 md:flex">
           <BracketsIcon className="size-5 text-sky" />
           <span className="font-display text-sm font-semibold text-cal-gold">
             Organizer
           </span>
         </div>
-        {NAV.map((item) => {
-          let active = false;
-          if (item.match === "queue") {
-            active = pathname.startsWith("/organizer/applications") && mine;
-          } else if (item.match === "all") {
-            active = pathname.startsWith("/organizer/applications") && !mine;
-          } else {
-            active = pathname.startsWith(item.href.split("?")[0]!);
-          }
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`inline-flex shrink-0 items-center gap-2 rounded-chip px-3 py-1.5 text-sm font-medium md:py-2 ${
-                active
-                  ? "bg-sunset text-navy-950"
-                  : "text-white/70 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <Icon className="size-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {SECTIONS.map((section) => (
+          <div
+            key={section.label}
+            className="flex items-center gap-1 md:flex-col md:items-stretch md:gap-1"
+          >
+            <span className="hidden px-3 text-[0.65rem] font-semibold uppercase tracking-wider text-white/35 md:block">
+              {section.label}
+            </span>
+            {section.items.map((item) => {
+              let active = false;
+              if (item.match === "queue") {
+                active = pathname.startsWith("/organizer/applications") && mine;
+              } else if (item.match === "all") {
+                active = pathname.startsWith("/organizer/applications") && !mine;
+              } else {
+                active = pathname.startsWith(item.href.split("?")[0]!);
+              }
+              const Icon = item.icon;
+              const badge = badgeValue(item.badgeKey);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative inline-flex shrink-0 items-center gap-2 rounded-chip py-1.5 pl-3 pr-2.5 text-sm font-medium md:py-2 ${
+                    active
+                      ? "bg-sunset text-navy-950"
+                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {active && (
+                    <span className="absolute -left-4 top-1/2 hidden h-5 w-1 -translate-y-1/2 rounded-full bg-cal-gold md:block" />
+                  )}
+                  <Icon className="size-4 shrink-0" />
+                  {item.label}
+                  {typeof badge === "number" && badge > 0 && (
+                    <span
+                      className={`ml-auto inline-flex min-w-4 items-center justify-center rounded-full px-1.5 text-[0.65rem] font-semibold tabular-nums ${
+                        active
+                          ? "bg-navy-950/20 text-navy-950"
+                          : "bg-white/15 text-white"
+                      }`}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       <div className="mt-auto hidden border-t border-navy-600 px-4 py-4 md:flex md:flex-col md:gap-3">

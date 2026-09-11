@@ -28,6 +28,8 @@ export function GradingPanel({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  const total = scores.technical + scores.creativity + scores.impact;
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -49,30 +51,44 @@ export function GradingPanel({
       onSubmit={onSubmit}
       className="flex flex-col gap-5 rounded-xl border border-border bg-card p-6"
     >
-      <h2 className="text-2xs font-medium text-muted-foreground">
-        {existing ? "Your review (editing)" : "Grade this application"}
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xs font-medium text-muted-foreground">
+          {existing ? "Your review (editing)" : "Grade this application"}
+        </h2>
+        <div className="flex items-center gap-2 rounded-chip bg-paper px-3 py-1.5">
+          <span className="text-2xs font-medium text-ink-soft">Total</span>
+          <span className="font-display text-h3 font-bold tabular-nums text-sunset">
+            {total}
+            <span className="text-2xs font-medium text-ink-soft">/30</span>
+          </span>
+        </div>
+      </div>
 
       {RUBRIC.map(({ key, label }) => (
         <label key={key} className="flex flex-col gap-2 text-sm">
           <span className="flex items-center justify-between">
             {label}
-            <span className="font-display font-semibold text-sunset">
-              {scores[key]}/10
+            <span className="inline-flex min-w-9 items-center justify-center rounded-chip bg-sunset/12 px-2 py-0.5 font-display text-sm font-bold tabular-nums text-sunset">
+              {scores[key]}
             </span>
           </span>
-          {/* Flat sunset fill up to value via accent-color — no gradient
-              track, standard platform rendering. */}
-          <input
-            type="range"
-            min={1}
-            max={10}
-            value={scores[key]}
-            onChange={(e) =>
-              setScores((s) => ({ ...s, [key]: Number(e.target.value) }))
-            }
-            className="h-1.5 w-full accent-sunset"
-          />
+          <span className="relative flex h-5 items-center">
+            <span className="pointer-events-none absolute inset-x-0 h-1.5 rounded-chip bg-line" />
+            <span
+              className="pointer-events-none absolute left-0 h-1.5 rounded-chip bg-sunset"
+              style={{ width: `${((scores[key] - 1) / 9) * 100}%` }}
+            />
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={scores[key]}
+              onChange={(e) =>
+                setScores((s) => ({ ...s, [key]: Number(e.target.value) }))
+              }
+              className="rubric-slider relative w-full"
+            />
+          </span>
         </label>
       ))}
 

@@ -30,6 +30,16 @@ export default async function OrganizerLayout({
     );
   }
 
+  // Nav count badges — total applications, and this reviewer's open queue.
+  const [{ count: totalCount }, { count: queueCount }] = await Promise.all([
+    supabase.from("applications").select("id", { count: "exact", head: true }),
+    supabase
+      .from("review_assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("reviewer_id", user.id)
+      .is("completed_at", null),
+  ]);
+
   return (
     <div className="flex min-h-screen flex-col bg-paper md:flex-row">
       <Suspense
@@ -40,6 +50,8 @@ export default async function OrganizerLayout({
         <OrganizerNav
           email={user.email ?? ""}
           fullName={profile?.full_name ?? null}
+          totalCount={totalCount ?? 0}
+          queueCount={queueCount ?? 0}
         />
       </Suspense>
       <div className="mx-auto w-full max-w-5xl flex-1 p-6">{children}</div>

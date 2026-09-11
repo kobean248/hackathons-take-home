@@ -5,7 +5,10 @@ import {
   LeaveTeamButton,
   ListingForm,
 } from "@/components/teams/team-forms";
-import { BearWaving } from "@/components/illustrations";
+import { BearSleeping, BearWaving } from "@/components/illustrations";
+import { QuestionIcon } from "@/components/icons";
+import { CatalogSeal } from "@/components/brand/catalog-seal";
+import { Avatar } from "@/components/avatar";
 
 type TeamRow = {
   id: string;
@@ -127,6 +130,11 @@ export default async function TeamsPage() {
     <main className="flex flex-col gap-8">
       <section className="relative overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
         <BearWaving className="pointer-events-none absolute -right-2 top-2 w-24 opacity-90 sm:right-4 sm:w-28" />
+        <CatalogSeal
+          topText="TEAM"
+          bottomText="ROSTER"
+          className="pointer-events-none absolute bottom-2 right-3 w-14 opacity-70 sm:bottom-3 sm:right-6"
+        />
         <div className="relative z-10 max-w-lg">
           <p className="text-2xs font-medium text-ink-soft">Teams</p>
           <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight text-ink">
@@ -160,17 +168,22 @@ export default async function TeamsPage() {
             <LeaveTeamButton />
           </div>
           <ul className="mt-6 divide-y divide-line border-t border-line">
-            {members.map((m) => (
-              <li
-                key={m.user_id}
-                className="flex items-center justify-between gap-3 py-3 text-sm"
-              >
-                <span className="text-ink">
-                  {m.profiles?.full_name || m.profiles?.email || "Member"}
-                </span>
-                <span className="text-2xs text-ink-soft">{m.role}</span>
-              </li>
-            ))}
+            {members.map((m) => {
+              const memberName =
+                m.profiles?.full_name || m.profiles?.email || "Member";
+              return (
+                <li
+                  key={m.user_id}
+                  className="flex items-center justify-between gap-3 py-3 text-sm"
+                >
+                  <span className="flex items-center gap-2.5 text-ink">
+                    <Avatar id={m.user_id} name={memberName} size="size-7" />
+                    {memberName}
+                  </span>
+                  <span className="text-2xs text-ink-soft">{m.role}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : (
@@ -216,9 +229,24 @@ export default async function TeamsPage() {
           Teams that still have open seats.
         </p>
         {lookingTeams.length === 0 ? (
-          <p className="mt-4 text-sm text-ink-soft">
-            No open teams yet — be the first to post one.
-          </p>
+          <div className="relative mt-4 overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
+            <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-8">
+              <BearSleeping className="w-24 shrink-0 sm:w-28" />
+              <div className="flex max-w-md flex-col gap-2">
+                <div className="flex items-center gap-2 text-sky">
+                  <QuestionIcon className="size-5" />
+                  <span className="text-2xs font-medium">No open teams</span>
+                </div>
+                <h3 className="font-display text-sm font-semibold text-ink">
+                  Nobody&apos;s posted an open team yet.
+                </h3>
+                <p className="text-sm leading-relaxed text-ink-soft">
+                  Create one above and check &quot;Show on looking-for-teammates
+                  board&quot; to be the first.
+                </p>
+              </div>
+            </div>
+          </div>
         ) : (
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {lookingTeams.map((t) => (
@@ -250,15 +278,21 @@ export default async function TeamsPage() {
         </h2>
         {listingRows.length ? (
           <ul className="mt-4 divide-y divide-line rounded-xl border border-line bg-surface">
-            {listingRows.map((l) => (
-              <li key={l.id} className="px-4 py-3">
-                <p className="text-sm font-medium text-ink">{l.headline}</p>
-                <p className="mt-1 text-2xs text-ink-soft">
-                  {l.profiles?.full_name || l.profiles?.email || "Hacker"}
-                  {l.skills ? ` · ${l.skills}` : ""}
-                </p>
-              </li>
-            ))}
+            {listingRows.map((l) => {
+              const listerName = l.profiles?.full_name || l.profiles?.email || "Hacker";
+              return (
+                <li key={l.id} className="flex items-center gap-3 px-4 py-3">
+                  <Avatar id={l.user_id} name={listerName} size="size-8" />
+                  <div>
+                    <p className="text-sm font-medium text-ink">{l.headline}</p>
+                    <p className="mt-0.5 text-2xs text-ink-soft">
+                      {listerName}
+                      {l.skills ? ` · ${l.skills}` : ""}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="mt-4 text-sm text-ink-soft">

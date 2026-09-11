@@ -18,7 +18,20 @@ import {
   BearWaving,
 } from "@/components/illustrations";
 import { CampanileTower } from "@/components/illustrations/berkeley-scenes";
+import { CatalogSeal } from "@/components/brand/catalog-seal";
+import { Avatar } from "@/components/avatar";
 import type { ApplicationRow, ApplicationStatus, AppRole } from "@/types";
+
+// Same semantic mapping as StatusBadge/StatusTimeline — a status dot
+// sequence for the "Your applications" quick-stat card.
+const STATUS_DOT_CLASS: Record<ApplicationStatus, string> = {
+  draft: "bg-ink-soft/40",
+  submitted: "bg-sky",
+  under_review: "bg-amber",
+  accepted: "bg-mint",
+  waitlisted: "bg-amber",
+  rejected: "bg-brick",
+};
 
 function firstNameFrom(
   fullName: string | null | undefined,
@@ -148,11 +161,37 @@ export default async function DashboardPage({
 
   const { data: membership } = await supabase
     .from("team_members")
-    .select("teams(name)")
+    .select("team_id, teams(name)")
     .eq("user_id", user.id)
-    .maybeSingle<{ teams: { name: string } | { name: string }[] | null }>();
+    .maybeSingle<{
+      team_id: string;
+      teams: { name: string } | { name: string }[] | null;
+    }>();
   const teamRaw = membership?.teams;
   const teamName = Array.isArray(teamRaw) ? teamRaw[0]?.name : teamRaw?.name;
+
+  let teammates: { user_id: string; full_name: string | null; email: string }[] =
+    [];
+  if (membership?.team_id) {
+    const { data: teammateRows } = await supabase
+      .from("team_members")
+      .select("user_id, profiles(full_name, email)")
+      .eq("team_id", membership.team_id)
+      .returns<
+        {
+          user_id: string;
+          profiles: { full_name: string | null; email: string } | { full_name: string | null; email: string }[] | null;
+        }[]
+      >();
+    teammates = (teammateRows ?? []).map((row) => {
+      const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+      return {
+        user_id: row.user_id,
+        full_name: p?.full_name ?? null,
+        email: p?.email ?? "",
+      };
+    });
+  }
 
   const draftCount = apps.filter((a) => a.status === "draft").length;
   const daysUntilDeadline = daysUntil(PRIORITY_DEADLINE);
@@ -182,8 +221,20 @@ export default async function DashboardPage({
       )}
 
       <section className="relative overflow-hidden rounded-xl border border-line bg-surface p-6 sm:p-8">
-        <CampanileTower className="pointer-events-none absolute -right-4 -bottom-10 h-[140%] opacity-[0.12] sm:-right-2 sm:h-[160%] sm:opacity-[0.16]" />
+        <div
+          className="pointer-events-none absolute -right-4 -bottom-10 h-[140%] opacity-[0.14] sm:-right-2 sm:h-[160%] sm:opacity-[0.18]"
+          style={{
+            maskImage: "linear-gradient(to left, black 45%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to left, black 45%, transparent 100%)",
+          }}
+        >
+          <CampanileTower className="h-full w-auto" />
+        </div>
         <BearWaving className="pointer-events-none absolute right-6 top-6 w-28 opacity-95 sm:right-10 sm:top-8 sm:w-36" />
+        <CatalogSeal
+          className="pointer-events-none absolute bottom-3 right-3 w-14 opacity-60 sm:bottom-4 sm:right-6"
+        />
 
         <div className="relative z-10 max-w-lg">
           <p className="text-2xs font-medium text-ink-soft">
@@ -202,7 +253,7 @@ export default async function DashboardPage({
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid items-start gap-4 sm:grid-cols-3">
         <QuickStatCard
           icon={<ApplicationsIcon className="size-5" />}
           label="Your applications"
@@ -215,6 +266,19 @@ export default async function DashboardPage({
           }
           href="/apply"
           cta="Manage"
+          secondary={
+            apps.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                {apps.map((a) => (
+                  <span
+                    key={a.id}
+                    title={`${APPLICATION_TYPES[a.type].label}: ${a.status}`}
+                    className={`size-2 rounded-full ${STATUS_DOT_CLASS[a.status]}`}
+                  />
+                ))}
+              </div>
+            )
+          }
         />
         <QuickStatCard
           icon={<QueueIcon className="size-5" />}
@@ -226,6 +290,14 @@ export default async function DashboardPage({
           }
           href="/apply"
           cta="View deadline"
+          secondary={
+            <span className="text-2xs text-ink-soft">
+              {PRIORITY_DEADLINE.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          }
         />
         <QuickStatCard
           icon={<TeamsIcon className="size-5" />}
@@ -233,6 +305,21 @@ export default async function DashboardPage({
           value={teamName || "Not on a team yet"}
           href="/teams"
           cta={teamName ? "View team" : "Find a team"}
+          secondary={
+            teammates.length > 0 && (
+              <div className="flex -space-x-1.5">
+                {teammates.slice(0, 5).map((t) => (
+                  <span key={t.user_id} className="ring-2 ring-surface rounded-full">
+                    <Avatar
+                      id={t.user_id}
+                      name={t.full_name || t.email || "?"}
+                      size="size-6"
+                    />
+                  </span>
+                ))}
+              </div>
+            )
+          }
         />
       </div>
 

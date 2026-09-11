@@ -4,6 +4,8 @@ import { APPLICATION_TYPES, type ApplicationTypeKey } from "@/lib/applicationTyp
 import { StatusBadge } from "@/components/apply/status-badge";
 import { DeadlineChip } from "@/components/deadline-chip";
 import { FlagIcon } from "@/components/icons";
+import { Avatar } from "@/components/avatar";
+import { ReviewRing } from "@/components/organizer/review-ring";
 import { OrganizerEmpty } from "@/components/organizer/organizer-empty";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,17 @@ type Row = {
   submitted_at: string | null;
   form_data: Record<string, unknown> | null;
   applicant: { full_name: string | null; email: string } | null;
+};
+
+// Same semantic mapping as StatusBadge — a colored left-edge accent per
+// row so status is scannable without reading the pill text.
+const STATUS_BORDER_CLASS: Record<ApplicationStatus, string> = {
+  draft: "border-l-ink-soft/40",
+  submitted: "border-l-sky",
+  under_review: "border-l-amber",
+  accepted: "border-l-mint",
+  waitlisted: "border-l-amber",
+  rejected: "border-l-brick",
 };
 
 function calibrationCopy(mine: number, overall: number): string | null {
@@ -384,30 +397,31 @@ export default async function OrganizerApplicationsPage({
             )}
             {applications.map((app) => {
               const flags = flagMap.get(app.id);
+              const name =
+                app.applicant?.full_name || app.applicant?.email || "?";
               return (
                 <tr
                   key={app.id}
-                  className="border-t border-line hover:bg-paper"
+                  className={`border-t border-line border-l-4 hover:bg-paper ${STATUS_BORDER_CLASS[app.status]}`}
                 >
                   <td className="px-4 py-2.5">
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-2.5">
                       {flags && flags.length > 0 && (
                         <span
                           title={fraudFlagTooltip(flags)}
-                          className="mt-0.5 inline-flex text-amber"
+                          className="inline-flex shrink-0 text-amber"
                           aria-label={fraudFlagTooltip(flags)}
                         >
                           <FlagIcon className="size-4" />
                         </span>
                       )}
+                      <Avatar id={app.applicant_id} name={name} />
                       <div>
                         <Link
                           href={`/organizer/applications/${app.id}`}
                           className="font-medium text-ink underline-offset-2 hover:underline"
                         >
-                          {app.applicant?.full_name ||
-                            app.applicant?.email ||
-                            "—"}
+                          {name}
                         </Link>
                         <div className="text-2xs text-ink-soft">
                           {app.applicant?.email}
@@ -434,10 +448,15 @@ export default async function OrganizerApplicationsPage({
                       "—"
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-ink-soft">
-                    {app.type === "hacker"
-                      ? `${completedCount.get(app.id) ?? 0} / ${assignedCount.get(app.id) ?? 0}`
-                      : "—"}
+                  <td className="px-4 py-2.5">
+                    {app.type === "hacker" ? (
+                      <ReviewRing
+                        done={completedCount.get(app.id) ?? 0}
+                        total={assignedCount.get(app.id) ?? 0}
+                      />
+                    ) : (
+                      <span className="text-ink-soft">—</span>
+                    )}
                   </td>
                 </tr>
               );

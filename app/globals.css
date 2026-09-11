@@ -239,3 +239,42 @@
     }
   }
 }
+
+/* Custom rubric slider — flat `line` track (transparent here; the visible
+   fill/track pair lives in a sibling div behind the input, see
+   GradingPanel), a bigger white knob with a 2px sunset ring. Fill/track
+   pseudo-elements are the only pieces that need real CSS since Tailwind
+   utilities can't reach ::-webkit-slider-thumb etc. */
+.rubric-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.rubric-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
+}
+.rubric-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-sunset);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+.rubric-slider::-moz-range-track {
+  height: 6px;
+  background: transparent;
+}
+.rubric-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-sunset);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}

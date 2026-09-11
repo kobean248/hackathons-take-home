@@ -14,6 +14,8 @@
 /coverage
 dev_plan.md
 design-doc.md
+.claude
+.agents
 # next.js
 /.next/
 /out/

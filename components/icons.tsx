@@ -253,6 +253,23 @@ export function GraduationCapIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function CheckIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M4 12.5 9.5 18 20 6" />
+    </svg>
+  );
+}
+
 export function FlagIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
