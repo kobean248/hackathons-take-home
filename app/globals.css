@@ -25,8 +25,13 @@
   --color-mint: #3e8f6c;
   --color-amber: #b8862e;
   --color-brick: #b4523f;
+  /* Official Cal identity — event-specific accents */
+  --color-berkeley: #003262;
+  --color-cal-gold: #fdb515;
 
-  --font-display: var(--font-space-grotesk), var(--font-ibm-plex-sans), sans-serif;
+  --font-hero: var(--font-bricolage), var(--font-space-grotesk), sans-serif;
+  --font-display: var(--font-bricolage), var(--font-space-grotesk), sans-serif;
+  --font-ui: var(--font-space-grotesk), var(--font-ibm-plex-sans), sans-serif;
   --font-sans: var(--font-ibm-plex-sans), sans-serif;
 
   /* type scale: 12/13/14/16/20/24/32/44 — only these stops */
@@ -115,7 +120,7 @@
   --chart-4: #b8862e;
   --chart-5: #b4523f;
   --radius: 0.75rem; /* 12px — cards */
-  --sidebar: #0a0e1f;
+  --sidebar: #003262; /* berkeley blue */
   --sidebar-foreground: #f6f4ee;
   --sidebar-primary: #de6b35;
   --sidebar-primary-foreground: #0a0e1f;
@@ -142,7 +147,25 @@
   h1,
   h2,
   h3 {
-    @apply font-display;
+    @apply font-hero;
+  }
+}
+
+/* Landing-only plane trail on hover of interactive controls */
+.hero-interactive .hero-plane {
+  filter: drop-shadow(0 0 0 transparent);
+  transition: filter 180ms ease, transform 180ms ease;
+}
+.hero-interactive:has(a:hover) .hero-plane,
+.hero-interactive:has(button:hover) .hero-plane {
+  filter: drop-shadow(-10px 4px 0 color-mix(in srgb, var(--color-sunset) 35%, transparent));
+  transform: translate(4px, -2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-interactive:has(a:hover) .hero-plane,
+  .hero-interactive:has(button:hover) .hero-plane {
+    filter: none;
+    transform: none;
   }
 }
 

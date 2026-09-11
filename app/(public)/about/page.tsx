@@ -1,5 +1,5 @@
 import { PublicWorld } from "@/components/shell/public-world";
-import { BearReading } from "@/components/illustrations";
+import { SceneFoundingStory } from "@/components/illustrations/berkeley-scenes";
 
 const STATS = [
   { label: "Years running", value: "13" },
@@ -12,7 +12,7 @@ const TIMELINE = [
   {
     year: "2013",
     title: "First weekend",
-    body: "A handful of Berkeley students ran a overnight build session in Soda Hall.",
+    body: "A handful of Berkeley students ran an overnight build session in Soda Hall.",
   },
   {
     year: "2016",
@@ -33,18 +33,23 @@ const TIMELINE = [
 
 export default function AboutPage() {
   return (
-    <PublicWorld>
-      <main className="mx-auto max-w-[1120px] px-6 py-16 sm:py-20">
+    <PublicWorld
+      scene={
+        <SceneFoundingStory className="mx-auto h-auto w-full max-w-3xl" />
+      }
+    >
+      <main className="mx-auto max-w-[1120px] px-6 py-12 sm:py-16">
         <div className="relative max-w-2xl">
-          <BearReading className="pointer-events-none absolute -right-4 -top-6 w-28 opacity-90 sm:-right-28 sm:top-0 sm:w-40" />
-          <p className="text-2xs font-medium tracking-wide text-sky">About</p>
-          <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight">
-            Built for builders at Berkeley
+          <p className="text-2xs font-medium tracking-wide text-cal-gold">
+            About
+          </p>
+          <h1 className="mt-2 font-hero text-h1 font-extrabold tracking-tight">
+            Founded under the Campanile
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
             Hackathons @ Berkeley exists to give students a weekend to ship
             something real — with mentors, sponsors, and a community that
-            actually shows up.
+            actually shows up on Sproul and beyond.
           </p>
         </div>
 
@@ -52,7 +57,7 @@ export default function AboutPage() {
           {STATS.map((s) => (
             <div key={s.label}>
               <dt className="text-2xs text-white/45">{s.label}</dt>
-              <dd className="mt-1 font-display text-h2 font-semibold tabular-nums text-sunset">
+              <dd className="mt-1 font-hero text-h2 font-bold tabular-nums text-cal-gold">
                 {s.value}
               </dd>
             </div>
@@ -60,23 +65,15 @@ export default function AboutPage() {
         </dl>
 
         <section className="mt-14 max-w-2xl">
-          <h2 className="font-display text-h3 font-semibold">Past chapters</h2>
-          <ol className="mt-8 space-y-0">
-            {TIMELINE.map((item, i) => (
-              <li key={item.year} className="relative flex gap-6 pb-10 last:pb-0">
-                <div className="flex flex-col items-center">
-                  <span className="size-2.5 shrink-0 rounded-full bg-sunset" />
-                  {i < TIMELINE.length - 1 && (
-                    <span className="mt-1 w-px flex-1 bg-navy-600" />
-                  )}
-                </div>
-                <div className="-mt-1">
-                  <p className="text-2xs font-medium tabular-nums text-sky">
-                    {item.year}
-                  </p>
-                  <h3 className="mt-1 font-display text-sm font-semibold">
-                    {item.title}
-                  </h3>
+          <h2 className="font-hero text-h3 font-bold">Our story</h2>
+          <ol className="mt-6 flex flex-col gap-6">
+            {TIMELINE.map((item) => (
+              <li key={item.year} className="flex gap-4">
+                <span className="w-14 shrink-0 font-hero text-sm font-bold tabular-nums text-sunset">
+                  {item.year}
+                </span>
+                <div>
+                  <p className="font-medium text-white">{item.title}</p>
                   <p className="mt-1 text-sm text-white/65">{item.body}</p>
                 </div>
               </li>

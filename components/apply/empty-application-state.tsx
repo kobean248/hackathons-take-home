@@ -22,7 +22,7 @@ export function EmptyApplicationState() {
             <span className="text-2xs font-medium">Empty hangar</span>
           </div>
           <h2 className="font-display text-h3 font-semibold text-ink">
-            No application yet?
+            No application yet? The hangar on Telegraph is empty.
           </h2>
           <p className="text-sm leading-relaxed text-ink-soft">
             You haven&apos;t started an application. Pick a role and fill out

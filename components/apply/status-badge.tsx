@@ -7,7 +7,7 @@ const STATUS_STYLES: Record<ApplicationStatus, string> = {
   draft: "bg-ink-soft/10 text-ink-soft",
   submitted: "bg-sky/12 text-sky",
   under_review: "bg-amber/12 text-amber",
-  accepted: "bg-mint/12 text-mint",
+  accepted: "bg-cal-gold/20 text-berkeley",
   waitlisted: "bg-amber/12 text-amber",
   rejected: "bg-brick/12 text-brick",
 };

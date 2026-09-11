@@ -1,39 +1,38 @@
-import {
-  CloudShape,
-  GlobeCurve,
-  StarField,
-} from "@/components/illustrations";
+import { BerkeleySkylineScene } from "@/components/illustrations/berkeley-scenes";
 
-/** Shared low-opacity illustrated backdrop for public marketing pages. */
+/** Shared Berkeley-world backdrop for public marketing pages. */
 export function PublicWorld({
   children,
   className = "",
+  scene,
 }: {
   children: React.ReactNode;
   className?: string;
+  /** Optional full-width set-piece under the header. */
+  scene?: React.ReactNode;
 }) {
   return (
     <div
       className={`relative isolate overflow-hidden bg-navy-950 text-white ${className}`}
     >
-      <StarField
-        density="sparse"
-        className="pointer-events-none absolute inset-0 h-full w-full opacity-35"
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.045]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(
+            `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><g fill='none' stroke='%23FDB515' stroke-width='1'><path d='M12 20c2-6 8-8 12-4'/><path d='M48 52l4-10 4 10h-8z'/><circle cx='64' cy='20' r='3'/></g></svg>`
+          )}")`,
+          backgroundSize: "80px 80px",
+        }}
       />
-      <GlobeCurve className="pointer-events-none absolute -bottom-24 left-1/2 w-[120%] max-w-4xl -translate-x-1/2 opacity-25 sm:opacity-30" />
-      <CloudShape
-        variant={2}
-        cream="var(--color-navy-800)"
-        primary="var(--color-sky)"
-        className="pointer-events-none absolute -left-10 top-24 w-36 opacity-40 sm:w-48"
-      />
-      <CloudShape
-        variant={4}
-        cream="var(--color-navy-800)"
-        primary="var(--color-sky)"
-        className="pointer-events-none absolute -right-8 top-40 w-32 opacity-35 sm:w-44"
-      />
-      <div className="relative z-10">{children}</div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 opacity-40">
+        <BerkeleySkylineScene className="h-48 w-full sm:h-64" />
+      </div>
+      <div className="relative z-10">
+        {scene ? (
+          <div className="mx-auto max-w-[1120px] px-6 pt-8">{scene}</div>
+        ) : null}
+        {children}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { PublicWorld } from "@/components/shell/public-world";
-import { BearSearching } from "@/components/illustrations";
+import { SceneFaqSearch } from "@/components/illustrations/berkeley-scenes";
 import { FaqAccordion } from "@/components/public/faq-accordion";
 
 const ITEMS = [
@@ -31,17 +31,18 @@ const ITEMS = [
 
 export default function FaqPage() {
   return (
-    <PublicWorld>
-      <main className="mx-auto max-w-[1120px] px-6 py-16 sm:py-20">
+    <PublicWorld
+      scene={<SceneFaqSearch className="mx-auto h-auto w-full max-w-2xl" />}
+    >
+      <main className="mx-auto max-w-[1120px] px-6 py-12 sm:py-16">
         <div className="relative max-w-xl">
-          <BearSearching className="pointer-events-none absolute -right-2 -top-4 w-28 opacity-90 sm:-right-24 sm:w-36" />
-          <p className="text-2xs font-medium tracking-wide text-sky">FAQ</p>
-          <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight">
-            Questions, answered
+          <p className="text-2xs font-medium tracking-wide text-cal-gold">FAQ</p>
+          <h1 className="mt-2 font-hero text-h1 font-extrabold tracking-tight">
+            Questions from Sproul
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
             Can&apos;t find what you need? Email{" "}
-            <span className="text-sky">hello@hackathons.berkeley.edu</span>{" "}
+            <span className="text-cal-gold">hello@hackathons.berkeley.edu</span>{" "}
             (placeholder) and we&apos;ll get back to you.
           </p>
         </div>

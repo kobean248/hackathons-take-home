@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PlaneMark } from "@/components/illustrations";
+import { Wordmark } from "@/components/brand/wordmark";
 
 const LINKS = [
   { href: "/about", label: "About" },
@@ -17,17 +17,10 @@ export function PublicNav({ signedIn = false }: { signedIn?: boolean }) {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-navy-600/60 bg-navy-950 text-white">
+    <header className="sticky top-0 z-40 border-b border-navy-600/60 bg-navy-950/95 text-white backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-[1120px] items-center justify-between gap-4 px-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 font-display text-sm font-semibold tracking-tight"
-          aria-label="Hackathons @ Berkeley home"
-        >
-          <PlaneMark className="size-5" />
-          <span className="hidden sm:inline">
-            Hackathons <span className="text-sunset">@</span> Berkeley
-          </span>
+        <Link href="/" aria-label="Hackathons at Berkeley home">
+          <Wordmark />
         </Link>
 
         <nav
@@ -41,9 +34,9 @@ export function PublicNav({ signedIn = false }: { signedIn?: boolean }) {
               <Link
                 key={href}
                 href={href}
-                className={`shrink-0 rounded-chip px-2.5 py-1.5 text-2xs font-medium tracking-wide sm:px-3 ${
+                className={`shrink-0 rounded-chip px-2.5 py-1.5 font-ui text-2xs font-medium tracking-wide sm:px-3 ${
                   active
-                    ? "bg-navy-800 text-white"
+                    ? "bg-berkeley text-cal-gold"
                     : "text-white/65 hover:bg-navy-800/70 hover:text-white"
                 }`}
               >
@@ -55,9 +48,9 @@ export function PublicNav({ signedIn = false }: { signedIn?: boolean }) {
 
         <Link
           href={signedIn ? "/dashboard" : "/login"}
-          className="shrink-0 rounded-chip bg-sunset px-3.5 py-1.5 text-2xs font-semibold text-navy-950 hover:bg-[color-mix(in_oklch,var(--color-sunset),black_8%)]"
+          className="shrink-0 rounded-chip bg-sunset px-3.5 py-1.5 font-ui text-2xs font-semibold text-navy-950 hover:bg-[color-mix(in_oklch,var(--color-sunset),black_8%)]"
         >
-          {signedIn ? "Portal" : "Sign in"}
+          {signedIn ? "Portal" : "Enter Sather Gate"}
         </Link>
       </div>
     </header>

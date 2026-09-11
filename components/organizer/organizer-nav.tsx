@@ -59,11 +59,13 @@ export function OrganizerNav({
   const mine = searchParams.get("assigned_to_me") === "true";
 
   return (
-    <nav className="flex shrink-0 flex-col bg-navy-950 text-white md:w-56 md:min-h-screen">
+    <nav className="flex shrink-0 flex-col bg-berkeley text-white md:w-56 md:min-h-screen">
       <div className="flex items-center gap-2 overflow-x-auto px-4 py-3 md:flex-col md:items-stretch md:gap-1 md:overflow-visible md:px-4 md:py-6">
         <div className="mb-2 hidden items-center gap-2 px-3 md:flex">
           <BracketsIcon className="size-5 text-sky" />
-          <span className="font-display text-sm font-semibold">Organizer</span>
+          <span className="font-display text-sm font-semibold text-cal-gold">
+            Organizer
+          </span>
         </div>
         {NAV.map((item) => {
           let active = false;

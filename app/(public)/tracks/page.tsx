@@ -1,5 +1,5 @@
 import { PublicWorld } from "@/components/shell/public-world";
-import { BearFlying } from "@/components/illustrations";
+import { SceneTracksTrophy } from "@/components/illustrations/berkeley-scenes";
 
 const TRACKS = [
   {
@@ -36,12 +36,17 @@ const TRACKS = [
 
 export default function TracksPage() {
   return (
-    <PublicWorld>
-      <main className="mx-auto max-w-[1120px] px-6 py-16 sm:py-20">
+    <PublicWorld
+      scene={
+        <SceneTracksTrophy className="mx-auto h-auto w-full max-w-2xl" />
+      }
+    >
+      <main className="mx-auto max-w-[1120px] px-6 py-12 sm:py-16">
         <div className="relative max-w-xl">
-          <BearFlying className="pointer-events-none absolute -right-2 -top-4 w-28 opacity-90 sm:-right-24 sm:w-36" />
-          <p className="text-2xs font-medium tracking-wide text-sky">Tracks</p>
-          <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight">
+          <p className="text-2xs font-medium tracking-wide text-cal-gold">
+            Tracks
+          </p>
+          <h1 className="mt-2 font-hero text-h1 font-extrabold tracking-tight">
             Prize tracks
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
@@ -56,10 +61,10 @@ export default function TracksPage() {
               key={track.name}
               className="rounded-xl border border-navy-600 bg-navy-800/60 p-5"
             >
-              <h2 className="font-display text-h3 font-semibold text-white">
+              <h2 className="font-hero text-h3 font-bold text-white">
                 {track.name}
               </h2>
-              <p className="mt-2 text-2xs font-medium text-sunset">
+              <p className="mt-2 text-2xs font-medium text-cal-gold">
                 {track.prize}
               </p>
               <p className="mt-3 text-sm leading-relaxed text-white/65">

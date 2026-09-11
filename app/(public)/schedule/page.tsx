@@ -1,5 +1,5 @@
 import { PublicWorld } from "@/components/shell/public-world";
-import { BearClock } from "@/components/illustrations";
+import { SceneBulletinBoard } from "@/components/illustrations/berkeley-scenes";
 
 const DAYS = [
   {
@@ -36,13 +36,18 @@ const DAYS = [
 
 export default function SchedulePage() {
   return (
-    <PublicWorld>
-      <main className="mx-auto max-w-[1120px] px-6 py-16 sm:py-20">
+    <PublicWorld
+      scene={
+        <SceneBulletinBoard className="mx-auto h-auto w-full max-w-3xl" />
+      }
+    >
+      <main className="mx-auto max-w-[1120px] px-6 py-12 sm:py-16">
         <div className="relative max-w-xl">
-          <BearClock className="pointer-events-none absolute -right-2 -top-4 w-28 opacity-90 sm:-right-24 sm:w-36" />
-          <p className="text-2xs font-medium tracking-wide text-sky">Schedule</p>
-          <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight">
-            One weekend, three days
+          <p className="text-2xs font-medium tracking-wide text-cal-gold">
+            Schedule
+          </p>
+          <h1 className="mt-2 font-hero text-h1 font-extrabold tracking-tight">
+            Weekend on the Glade
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
             Times are Pacific. Exact rooms land closer to kickoff — watch your

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PublicWorld } from "@/components/shell/public-world";
-import { BearCelebrating } from "@/components/illustrations";
+import { SceneSponsorMedals } from "@/components/illustrations/berkeley-scenes";
 import { Button } from "@/components/ui/button";
 
 const TIERS = [
@@ -42,12 +42,17 @@ const TIERS = [
 
 export default function SponsorsPage() {
   return (
-    <PublicWorld>
-      <main className="mx-auto max-w-[1120px] px-6 py-16 sm:py-20">
+    <PublicWorld
+      scene={
+        <SceneSponsorMedals className="mx-auto h-auto w-full max-w-2xl" />
+      }
+    >
+      <main className="mx-auto max-w-[1120px] px-6 py-12 sm:py-16">
         <div className="relative max-w-xl">
-          <BearCelebrating className="pointer-events-none absolute -right-2 -top-4 w-28 opacity-90 sm:-right-24 sm:w-36" />
-          <p className="text-2xs font-medium tracking-wide text-sky">Sponsors</p>
-          <h1 className="mt-2 font-display text-h1 font-semibold tracking-tight">
+          <p className="text-2xs font-medium tracking-wide text-cal-gold">
+            Sponsors
+          </p>
+          <h1 className="mt-2 font-hero text-h1 font-extrabold tracking-tight">
             Partners who make it possible
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
@@ -59,7 +64,13 @@ export default function SponsorsPage() {
         <div className="mt-14 space-y-12">
           {TIERS.map((tier) => (
             <section key={tier.name}>
-              <h2 className="font-display text-h3 font-semibold text-sunset">
+              <h2
+                className={`font-hero text-h3 font-bold ${
+                  tier.name === "Title" || tier.name === "Gold"
+                    ? "text-cal-gold"
+                    : "text-sunset"
+                }`}
+              >
                 {tier.name}
               </h2>
               <ul

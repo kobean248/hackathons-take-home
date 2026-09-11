@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ApplyIcon, OverviewIcon, SettingsIcon, TeamsIcon } from "@/components/icons";
 import { UserMenu } from "@/components/shell/user-menu";
 import { CountdownNavChip } from "@/components/countdown/countdown";
-import { PlaneMark } from "@/components/illustrations";
+import { CampanileMark } from "@/components/brand/wordmark";
 import type { AppRole } from "@/types";
 
 const NAV = [
@@ -38,7 +38,7 @@ export function AppNav({
             className="inline-flex items-center gap-1.5"
             aria-label="Browse marketing site"
           >
-            <PlaneMark className="size-5" />
+            <CampanileMark className="h-7 w-4" />
           </Link>
           <nav className="flex items-center gap-1.5" aria-label="Applicant">
             {NAV.map(({ href, label, icon: Icon }) => {
